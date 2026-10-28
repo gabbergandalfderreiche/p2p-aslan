@@ -274,6 +274,20 @@ export const de = {
     yours: "deine Wette",
   },
 
+  uma: {
+    question: "Was ist UMA?",
+    what: "UMA ist ein unabhängiges Oracle: ein Dienst, der Ereignisse aus der echten Welt – hier Fussballergebnisse – verlässlich auf die Blockchain bringt.",
+    steps: [
+      "Nach dem Spiel meldet unser Ergebnis-Bot das Resultat an UMA und hinterlegt dafür eine Kaution.",
+      "Zwei Stunden lang kann jeder widersprechen, wenn die Meldung falsch ist.",
+      "Widerspricht niemand, gilt das Ergebnis, und der Contract zahlt automatisch aus.",
+      "Bei einem Widerspruch stimmen die UMA-Teilnehmer über das richtige Ergebnis ab. Wer falsch lag, verliert seine Kaution.",
+    ],
+    why: "So kann weder der Betreiber noch dein Gegner das Ergebnis allein bestimmen. Auch bekannte Prognosemärkte wie Polymarket entscheiden ihre Märkte über UMA.",
+    testnet: "Im Testnetz gibt es diese Abstimmung noch nicht: Einen Streitfall würde dort ein Test-Oracle entscheiden.",
+    more: "Mehr über UMA ↗",
+  },
+
   bet: {
     metaTitle: "Wette",
     back: "← Zur Übersicht",

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Lion } from "@/components/lion/Lion";
 import { SiteHeader } from "@/components/SiteHeader";
 import { LegalFooter } from "@/components/LegalFooter";
+import { UmaInfo } from "@/components/UmaInfo";
 import { localePath } from "@/i18n";
 import { getDictionary, getLocale } from "@/i18n/server";
 
@@ -67,6 +68,7 @@ export default async function Home() {
                 </li>
               ))}
             </ul>
+            <UmaInfo className="mt-4" />
           </div>
           <div className="card p-6">
             <h2 className="font-display text-2xl font-extrabold">{h.factsTitle}</h2>

@@ -275,6 +275,20 @@ export const en: Dictionary = {
     yours: "your bet",
   },
 
+  uma: {
+    question: "What is UMA?",
+    what: "UMA is an independent oracle: a service that brings real-world events – here football results – reliably onto the blockchain.",
+    steps: [
+      "After the match our result bot reports the score to UMA and puts down a bond.",
+      "For two hours anyone can dispute the report if it is wrong.",
+      "If nobody disputes it, the result stands and the contract pays out automatically.",
+      "If someone disputes it, UMA's participants vote on the correct result. Whoever was wrong loses their bond.",
+    ],
+    why: "That way neither the operator nor your opponent can decide the result alone. Well-known prediction markets such as Polymarket also settle their markets through UMA.",
+    testnet: "On the testnet this vote does not exist yet: a dispute there would be decided by a test oracle.",
+    more: "More about UMA ↗",
+  },
+
   bet: {
     metaTitle: "Bet",
     back: "← Back to overview",

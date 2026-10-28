@@ -30,6 +30,7 @@ import { refetchSoon } from "@/lib/tx";
 import { ensureAllowance, useSend } from "@/lib/useSend";
 import { useStarterKit } from "@/lib/useStarterKit";
 import { StarterKit } from "@/components/StarterKit";
+import { UmaInfo } from "@/components/UmaInfo";
 import { useT } from "@/i18n/client";
 
 export function MatchBetView() {
@@ -227,6 +228,7 @@ function Details({ id, bet, match, isNew, refetch }: { id: bigint; bet: MatchBet
         <div className="mt-5 rounded-2xl bg-surface-2 p-4 text-sm">
           <p className="font-semibold">{result}</p>
           <p className="mt-1 text-xs text-muted">{mt.regularTime}</p>
+          <UmaInfo className="mt-2" />
         </div>
         <p className="mt-3 text-xs text-muted">
           {mt.number(String(id))}
