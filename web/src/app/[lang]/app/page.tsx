@@ -3,7 +3,7 @@ import { AppFrame } from "@/components/AppFrame";
 import { BRAND } from "@/lib/brand";
 import { getDictionary } from "@/i18n/server";
 import { WalletCard } from "./WalletCard";
-import { CreateBet } from "./CreateBet";
+import { NewBet } from "./NewBet";
 import { BetLists } from "./BetLists";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -18,7 +18,7 @@ export default function AppPage() {
   return (
     <AppFrame>
       <div className="grid gap-6 lg:grid-cols-[1fr_22rem]">
-        <CreateBet />
+        <NewBet />
         <WalletCard />
       </div>
       <BetLists />

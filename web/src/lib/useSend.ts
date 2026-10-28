@@ -53,21 +53,22 @@ export function useSend(t: Dictionary) {
   return { run, busy, error, hash };
 }
 
-/** Approves the escrow for `amount` test dollars unless the allowance already covers it. */
+/** Approves `spender` (one of our contracts) for `amount` test dollars unless the allowance already covers it. */
 export async function ensureAllowance(
   step: (label: string, tx: (w: Write) => Promise<Hash>) => Promise<Hash>,
   owner: Address,
+  spender: Address,
   amount: bigint,
   label: string,
 ) {
   if (!DEPLOYMENT) throw new Error("not deployed");
-  const { token, escrow } = DEPLOYMENT;
+  const { token } = DEPLOYMENT;
   const allowance = await readContract(wagmiConfig, {
     address: token,
     abi: erc20Abi,
     functionName: "allowance",
-    args: [owner, escrow],
+    args: [owner, spender],
   });
   if (allowance >= amount) return;
-  await step(label, (w) => w({ address: token, abi: erc20Abi, functionName: "approve", args: [escrow, amount] }));
+  await step(label, (w) => w({ address: token, abi: erc20Abi, functionName: "approve", args: [spender, amount] }));
 }

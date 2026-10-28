@@ -1,0 +1,16 @@
+{
+  "name": "p2p-bet-results",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Lists football matches and reports their results to UMA for MatchBets.",
+  "scripts": {
+    "start": "node src/results.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "viem": "2.57.11"
+  }
+}

@@ -29,9 +29,14 @@ export type Deployment = {
   token: \`0x\${string}\`;
   timelock: \`0x\${string}\`;
   escrow: \`0x\${string}\`;
+  matchBets?: \`0x\${string}\`;
+  oracle?: \`0x\${string}\`;
+  bondCurrency?: \`0x\${string}\`;
 };
 
 export const betEscrowAbi = ${JSON.stringify(abi("BetEscrow.sol", "BetEscrow"), null, 2)} as const;
+
+export const matchBetsAbi = ${JSON.stringify(abi("MatchBets.sol", "MatchBets"), null, 2)} as const;
 
 export const testDollarAbi = ${JSON.stringify(abi("TestDollar.sol", "TestDollar"), null, 2)} as const;
 

@@ -109,14 +109,14 @@ function Details({ id, bet, isNew, refetch }: { id: bigint; bet: Bet; isNew: boo
         )}
       </section>
 
-      {bet.status === Status.Open && <Share id={id} bet={bet} highlight={isNew} />}
+      {bet.status === Status.Open && <Share href={`/bet?id=${id}`} highlight={isNew} inviteOnly={isInviteOnly(bet)} />}
 
       <Actions id={id} bet={bet} role={role} can={can} refetch={refetch} />
     </article>
   );
 }
 
-function Fact({ label, value }: { label: string; value: string }) {
+export function Fact({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-2xl border border-line p-3">
       <div className="text-xs text-muted">{label}</div>
@@ -125,7 +125,7 @@ function Fact({ label, value }: { label: string; value: string }) {
   );
 }
 
-function Person({ label, who, me, fallback }: { label: string; who?: Address; me?: Address; fallback?: string }) {
+export function Person({ label, who, me, fallback }: { label: string; who?: Address; me?: Address; fallback?: string }) {
   const { t } = useT();
   const url = who ? addressUrl(who) : null;
   const isMe = Boolean(who && me && who.toLowerCase() === me.toLowerCase());
@@ -148,10 +148,11 @@ function Person({ label, who, me, fallback }: { label: string; who?: Address; me
   );
 }
 
-function Share({ id, bet, highlight }: { id: bigint; bet: Bet; highlight: boolean }) {
+/** Share link of a bet page; `href` is the locale-free path, e.g. "/bet?id=3". */
+export function Share({ href, highlight, inviteOnly }: { href: string; highlight: boolean; inviteOnly: boolean }) {
   const { t, path } = useT();
   const [copied, setCopied] = useState(false);
-  const link = typeof window === "undefined" ? "" : `${window.location.origin}${path(`/bet?id=${id}`)}`;
+  const link = typeof window === "undefined" ? "" : `${window.location.origin}${path(href)}`;
 
   async function copy() {
     try {
@@ -173,7 +174,7 @@ function Share({ id, bet, highlight }: { id: bigint; bet: Bet; highlight: boolea
           {copied ? t.bet.copied : t.bet.copy}
         </button>
       </div>
-      <p className="mt-2 text-xs text-muted">{isInviteOnly(bet) ? t.bet.inviteOnly : t.bet.shareHint}</p>
+      <p className="mt-2 text-xs text-muted">{inviteOnly ? t.bet.inviteOnly : t.bet.shareHint}</p>
     </section>
   );
 }
@@ -208,7 +209,7 @@ function Actions({
 
   const join = () =>
     act(async (step) => {
-      await ensureAllowance(step, address!, bet.stake, t.app.create.approving);
+      await ensureAllowance(step, address!, escrow, bet.stake, t.app.create.approving);
       await step(b.joining, (w) => w({ address: escrow, abi: betEscrowAbi, functionName: "join", args: [id] }));
     });
   const cancel = () =>

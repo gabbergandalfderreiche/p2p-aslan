@@ -18,8 +18,8 @@ import { useT } from "@/i18n/client";
 const DAY = 86_400;
 const STAKES = ["5", "10", "25"];
 
-/** Form for a new bet: claim, stake, optional opponent and arbiter, two deadlines. */
-export function CreateBet() {
+/** Form for a custom bet: claim, stake, optional opponent and arbiter, two deadlines. */
+export function CreateBet({ embedded = false }: { embedded?: boolean }) {
   const { t, path } = useT();
   const c = t.app.create;
   const router = useRouter();
@@ -67,7 +67,7 @@ export function CreateBet() {
     const escrow = DEPLOYMENT.escrow;
     let id: bigint | undefined;
     const ok = await send.run(async (step) => {
-      await ensureAllowance(step, address, amount, c.approving);
+      await ensureAllowance(step, address, escrow, amount, c.approving);
       const hash = await step(c.creating, (write) =>
         write({
           address: escrow,
@@ -91,8 +91,8 @@ export function CreateBet() {
   }
 
   return (
-    <section className="card p-5">
-      <h2 className="font-display text-2xl font-extrabold">{c.title}</h2>
+    <section className={embedded ? "" : "card p-5"}>
+      {!embedded && <h2 className="font-display text-2xl font-extrabold">{c.title}</h2>}
 
       <label className="mt-4 block">
         <span className="text-sm font-bold">{c.claim}</span>

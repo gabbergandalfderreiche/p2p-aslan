@@ -63,7 +63,9 @@ export default async function Impressum() {
             externally audited yet.
           </p>
           <p>
-            Claims in bets are written by users and stored on the blockchain; the operator does not check them and
+            Football results are taken from football-data.org and confirmed through the UMA Optimistic Oracle; the
+            operator does not set them and cannot change a confirmed result. Claims in custom bets are written by
+            users and stored on the blockchain; the operator does not check them and
             cannot remove them. The operators of external links (e.g. block explorers, faucets) are solely
             responsible for their content.
           </p>
@@ -81,7 +83,9 @@ export default async function Impressum() {
             Contracts sind öffentlich einsehbar, wurden aber noch nicht extern geprüft.
           </p>
           <p>
-            Die Behauptungen in Wetten schreiben die Nutzer selbst; sie stehen auf der Blockchain, werden vom
+            Fussballergebnisse stammen von football-data.org und werden über das UMA Optimistic Oracle bestätigt;
+            der Betreiber legt sie nicht fest und kann ein bestätigtes Ergebnis nicht ändern. Die Behauptungen in
+            eigenen Wetten schreiben die Nutzer selbst; sie stehen auf der Blockchain, werden vom
             Betreiber nicht geprüft und können von ihm nicht entfernt werden. Für Inhalte externer Links (z. B.
             Block-Explorer, Faucets) sind ausschliesslich deren Betreiber verantwortlich.
           </p>

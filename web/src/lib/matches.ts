@@ -1,0 +1,99 @@
+import { zeroAddress, zeroHash, type Address } from "viem";
+import { useReadContract, useReadContracts } from "wagmi";
+import { matchBetsAbi } from "@/generated/contracts";
+import { DEPLOYMENT } from "./bets";
+
+/** MatchBets address on the active chain; undefined until it is deployed there. */
+export const MATCH_BETS = DEPLOYMENT?.matchBets;
+
+/** Same order as the enums in MatchBets.sol. */
+export const Result = { None: 0, Home: 1, Draw: 2, Away: 3, Void: 4 } as const;
+export const Pick = { None: 0, Home: 1, Draw: 2, Away: 3, Other: 4 } as const;
+export const MatchStatus = { None: 0, Open: 1, Active: 2, Settled: 3, Cancelled: 4 } as const;
+export const Payout = { None: 0, Creator: 1, Taker: 2, Refund: 3 } as const;
+export type PickValue = (typeof Pick)[keyof typeof Pick];
+
+export const RESULT_DELAY = 2 * 3600; // MatchBets.RESULT_DELAY
+export const RESULT_TIMEOUT = 14 * 86_400; // MatchBets.RESULT_TIMEOUT
+
+export type Match = {
+  kickoff: number;
+  result: number;
+  asserted: number;
+  assertedAt: number;
+  assertionId: `0x${string}`;
+  home: string;
+  away: string;
+  competition: string;
+};
+
+export type MatchBet = {
+  creator: Address;
+  creatorStake: bigint;
+  taker: Address;
+  takerStake: bigint;
+  matchId: bigint;
+  creatorPick: number;
+  takerPick: number;
+  status: number;
+  payout: number;
+  feeBps: number;
+};
+
+export const hasPendingResult = (m: Match) => m.assertionId !== zeroHash;
+export const isInviteOnlyMatchBet = (b: MatchBet) => b.status === MatchStatus.Open && b.taker !== zeroAddress;
+
+/** Every listed match, newest listing last. */
+export function useMatches() {
+  const address = MATCH_BETS;
+  const count = useReadContract({
+    address,
+    abi: matchBetsAbi,
+    functionName: "matchCount",
+    query: { enabled: Boolean(address), refetchInterval: 60_000 },
+  });
+  const ids = useReadContract({
+    address,
+    abi: matchBetsAbi,
+    functionName: "matchIds",
+    args: [0n, count.data ?? 0n],
+    query: { enabled: Boolean(address && count.data), refetchInterval: 60_000 },
+  });
+  const list = ids.data ?? [];
+  const details = useReadContracts({
+    contracts: list.map((id) => ({ address, abi: matchBetsAbi, functionName: "getMatch", args: [id] }) as const),
+    query: { enabled: list.length > 0, refetchInterval: 60_000 },
+  });
+  const matches = list.flatMap((id, i) => {
+    const m = details.data?.[i]?.result as Match | undefined;
+    return m ? [{ id, ...m }] : [];
+  });
+  return { matches, isLoading: count.isLoading || ids.isLoading || details.isLoading };
+}
+
+export function useMatch(id: bigint | undefined) {
+  return useReadContract({
+    address: MATCH_BETS,
+    abi: matchBetsAbi,
+    functionName: "getMatch",
+    args: [id ?? 0n],
+    query: { enabled: Boolean(MATCH_BETS && id), refetchInterval: 15_000 },
+  });
+}
+
+/** Which result makes the taker win, for display. */
+export function takerWinsOn(bet: { creatorPick: number; takerPick: number }) {
+  if (bet.takerPick === Pick.Other) return [Pick.Home, Pick.Draw, Pick.Away].filter((p) => p !== bet.creatorPick);
+  return [bet.takerPick];
+}
+
+/** Dispute window of a result report in seconds (2 h on Base Sepolia, 60 s locally). */
+export function useLiveness() {
+  const q = useReadContract({
+    address: MATCH_BETS,
+    abi: matchBetsAbi,
+    functionName: "liveness",
+    query: { enabled: Boolean(MATCH_BETS), staleTime: Infinity },
+  });
+  return Number(q.data ?? 7200n);
+}
