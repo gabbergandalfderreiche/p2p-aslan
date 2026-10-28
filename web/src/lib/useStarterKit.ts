@@ -61,6 +61,7 @@ export function useStarterKit(address?: Address) {
         body: JSON.stringify({ address }),
       });
       const data = (await res.json()) as { hash?: Hash; error?: string };
+      if (data.error === "has-gas") return true; // the server sees enough already
       if (!data.hash) {
         setGasError(data.error === "cooldown" ? w.gasCooldown : w.gasOff);
         return false;
@@ -80,7 +81,12 @@ export function useStarterKit(address?: Address) {
   async function start() {
     if (!address || !token) return;
     setDone(false);
-    if (needsGas && !(await getGas())) return refetchAll();
+    // Decide on a fresh balance: a stale or missing value must not skip the test ETH and leave the
+    // wallet unable to pay for the faucet transaction.
+    if (NETWORK !== "local") {
+      const fresh = (await eth.refetch()).data?.value;
+      if ((fresh === undefined || fresh < MIN_GAS) && !(await getGas())) return refetchAll();
+    }
     if (canClaim) {
       const ok = await send.run(async (step) => {
         await step(w.faucetBusy, (write) => write({ address: token, abi: testDollarAbi, functionName: "faucet" }));
