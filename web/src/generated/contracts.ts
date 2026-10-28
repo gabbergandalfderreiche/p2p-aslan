@@ -2165,4 +2165,16 @@ export const testDollarAbi = [
   }
 ] as const;
 
-export const deployments: Partial<Record<number, Deployment>> = {};
+export const deployments: Partial<Record<number, Deployment>> = {
+  "84532": {
+    "admin": "0xbD7C9af9Cd062e3F099d8442393052dd71744c01",
+    "block": 51458427,
+    "bondCurrency": "0x7E6d9618Ba8a87421609352d6e711958A97e2512",
+    "chainId": 84532,
+    "escrow": "0x268e2876efeF44b8C2a8aA5d11eB29d100d1b5C3",
+    "matchBets": "0xB0F6044468bdBAeC2E0476EC56849187F9c6C8c3",
+    "oracle": "0x0F7fC5E6482f096380db6158f978167b57388deE",
+    "timelock": "0x006CB046976F0fD2e753ab078566625B58b6536e",
+    "token": "0x1bCB8c8faaaE779E2E67eF4543588c1C0bA8a8c4"
+  }
+};
