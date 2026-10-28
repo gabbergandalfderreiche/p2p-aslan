@@ -1,14 +1,17 @@
 "use client";
 
-import { useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
+import { useEffect, useId, useState, useSyncExternalStore, type ReactNode } from "react";
 import type { Address } from "viem";
 import { fmtUsd, short, TOKEN_SYMBOL } from "@/lib/bets";
 import { addressUrl } from "@/lib/network";
 import { fmtDate } from "@/lib/time";
 import { useT } from "@/i18n/client";
 
-// Neutral badge colours picked from the team name; deliberately not the clubs' own colours or crests.
-const BADGE_COLOURS = ["#2f5d8a", "#7a3b69", "#2e7d5b", "#8a5a2b", "#4b4f9c", "#9c3d3d", "#3d7f8f", "#6b6b2e"];
+// Neutral crest colours picked from the team name; deliberately not the clubs' own crests or colours.
+const CREST_COLOURS = ["#2f5d8a", "#7a3b69", "#2e7d5b", "#8a5a2b", "#4b4f9c", "#9c3d3d", "#3d7f8f", "#6b6b2e", "#5b3d8f", "#2b6b6b"];
+const CREST_ACCENTS = ["#f6e4c3", "#f0a73a", "#ffffff", "#d7dde5"];
+// Shield outline in a 100×120 box.
+const SHIELD = "M50 4 L94 16 V58 C94 86 74 106 50 116 C26 106 6 86 6 58 V16 Z";
 
 function initials(name: string) {
   const words = name.replace(/[^\p{L}\p{N} ]/gu, " ").split(/\s+/).filter(Boolean);
@@ -17,21 +20,57 @@ function initials(name: string) {
   return (words[0][0] + words[words.length - 1][0]).toUpperCase();
 }
 
-function colourOf(name: string) {
+function hashOf(name: string) {
   let h = 0;
   for (const c of name) h = (h * 31 + c.charCodeAt(0)) >>> 0;
-  return BADGE_COLOURS[h % BADGE_COLOURS.length];
+  return h;
 }
 
+/** A crest-like shield with the team's initials, so matches look like football without real club marks. */
 export function TeamBadge({ name, size = 64 }: { name: string; size?: number }) {
+  const id = `crest${useId().replace(/[^a-zA-Z0-9]/g, "")}`;
+  const h = hashOf(name);
+  const main = CREST_COLOURS[h % CREST_COLOURS.length];
+  const accent = CREST_ACCENTS[(h >>> 4) % CREST_ACCENTS.length];
+  const pattern = (h >>> 8) % 4;
+  const text = initials(name);
   return (
-    <span
-      className="grid shrink-0 place-items-center rounded-full border-[3px] border-white/80 font-display font-extrabold text-white shadow-lg"
-      style={{ width: size, height: size, background: colourOf(name), fontSize: size * 0.3 }}
-      aria-hidden
-    >
-      {initials(name)}
-    </span>
+    <svg width={size} height={size * 1.2} viewBox="0 0 100 120" className="shrink-0 drop-shadow-lg" aria-hidden>
+      <defs>
+        <clipPath id={id}>
+          <path d={SHIELD} />
+        </clipPath>
+      </defs>
+      <g clipPath={`url(#${id})`}>
+        <rect width="100" height="120" fill={main} />
+        {pattern === 0 && <path d="M0 0 L100 0 L0 120 Z" fill={accent} opacity=".35" />}
+        {pattern === 1 && (
+          <g fill={accent} opacity=".3">
+            <rect x="20" width="12" height="120" />
+            <rect x="44" width="12" height="120" />
+            <rect x="68" width="12" height="120" />
+          </g>
+        )}
+        {pattern === 2 && <path d="M0 30 L50 62 L100 30 V52 L50 84 L0 52 Z" fill={accent} opacity=".4" />}
+        {pattern === 3 && <rect y="40" width="100" height="26" fill={accent} opacity=".35" />}
+        <rect width="100" height="20" fill="black" opacity=".18" />
+      </g>
+      <path d={SHIELD} fill="none" stroke="white" strokeOpacity=".9" strokeWidth="5" strokeLinejoin="round" />
+      <text
+        x="50"
+        y="72"
+        textAnchor="middle"
+        fontSize={text.length > 2 ? 28 : 34}
+        fontWeight="900"
+        fontFamily="var(--font-display), system-ui, sans-serif"
+        fill="white"
+        stroke="rgba(0,0,0,.35)"
+        strokeWidth="1.5"
+        paintOrder="stroke"
+      >
+        {text}
+      </text>
+    </svg>
   );
 }
 
@@ -139,7 +178,7 @@ export function Scoreboard({
       </div>
       <div className="relative mt-5 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
         <div className="flex flex-col items-center gap-2 text-center">
-          <TeamBadge name={home} />
+          <TeamBadge name={home} size={58} />
           <span className="font-display text-lg font-extrabold leading-tight drop-shadow sm:text-xl">{home}</span>
         </div>
         <div className="flex flex-col items-center text-center">
@@ -152,7 +191,7 @@ export function Scoreboard({
           <span className="num mt-1 text-[11px] opacity-80">{fmtDate(kickoff, locale)}</span>
         </div>
         <div className="flex flex-col items-center gap-2 text-center">
-          <TeamBadge name={away} />
+          <TeamBadge name={away} size={58} />
           <span className="font-display text-lg font-extrabold leading-tight drop-shadow sm:text-xl">{away}</span>
         </div>
       </div>

@@ -8,6 +8,7 @@ export type Deployment = {
   timelock: `0x${string}`;
   escrow: `0x${string}`;
   matchBets?: `0x${string}`;
+  matchBetsPrevious?: `0x${string}`;
   oracle?: `0x${string}`;
   bondCurrency?: `0x${string}`;
 };
@@ -984,17 +985,7 @@ export const matchBetsAbi = [
         "internalType": "enum MatchBets.Pick"
       },
       {
-        "name": "takerPick",
-        "type": "uint8",
-        "internalType": "enum MatchBets.Pick"
-      },
-      {
-        "name": "creatorStake",
-        "type": "uint96",
-        "internalType": "uint96"
-      },
-      {
-        "name": "takerStake",
+        "name": "stake",
         "type": "uint96",
         "internalType": "uint96"
       },
@@ -1192,6 +1183,11 @@ export const matchBetsAbi = [
         "name": "id",
         "type": "uint256",
         "internalType": "uint256"
+      },
+      {
+        "name": "takerPick",
+        "type": "uint8",
+        "internalType": "enum MatchBets.Pick"
       }
     ],
     "outputs": [],

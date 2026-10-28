@@ -19,7 +19,9 @@ import {
   Pick,
   RESULT_TIMEOUT,
   Result,
-  takerWinsOn,
+  freePicks,
+  PICK_SIGN,
+  unpicked,
   useLiveness,
   useMatch,
   type Match,
@@ -80,7 +82,9 @@ function Details({ id, bet, match, isNew, refetch }: { id: bigint; bet: MatchBet
   const liveness = useLiveness();
 
   const pickLabel = (p: number) =>
-    p === Pick.Home ? mt.wins(match.home) : p === Pick.Away ? mt.wins(match.away) : p === Pick.Draw ? mt.draw : mt.other;
+    p === Pick.Home ? mt.wins(match.home) : p === Pick.Away ? mt.wins(match.away) : mt.draw;
+  const [freeA, freeB] = freePicks(bet.creatorPick);
+  const third = unpicked(bet);
   const winsOn = (picks: number[]) => `${mt.winsOn} ${picks.map((p) => mt.resultLabel[p]).join(" / ")}`;
   const pot = bet.creatorStake + bet.takerStake;
   const fmt = (v: bigint) => `${fmtUsd(v)} ${TOKEN_SYMBOL}`;
@@ -123,7 +127,7 @@ function Details({ id, bet, match, isNew, refetch }: { id: bigint; bet: MatchBet
   if (cancelled) position = { tone: "muted", text: mt.position.cancelled };
   else if (role === "visitor") {
     position = open && !kicked
-      ? { tone: "accent", text: mt.position.offer(fmt(bet.takerStake), pickLabel(bet.takerPick), fmt(pot)) }
+      ? { tone: "accent", text: mt.position.offer(fmt(bet.takerStake), pickLabel(freeA), pickLabel(freeB), fmt(pot)) }
       : { tone: "muted", text: settled ? mt.payout[bet.payout] : open ? mt.position.notTaken : mt.position.watching };
   } else {
     const stakeText = mt.position.mine(fmt(myStake), pickLabel(myPick));
@@ -216,12 +220,15 @@ function Details({ id, bet, match, isNew, refetch }: { id: bigint; bet: MatchBet
             role={mt.taker}
             who={open && bet.taker === zeroAddress ? null : bet.taker}
             me={address}
-            pick={pickLabel(bet.takerPick)}
-            winsOn={winsOn(takerWinsOn(bet))}
+            pick={open ? mt.takerChooses(pickLabel(freeA), pickLabel(freeB)) : pickLabel(bet.takerPick)}
+            winsOn={open ? mt.sameStakeShort : winsOn([bet.takerPick])}
             stake={bet.takerStake}
             state={slipState("taker")}
           />
         </div>
+        {!open && third !== undefined && (
+          <p className="mt-3 text-center text-xs text-muted">{mt.thirdRefund(pickLabel(third))}</p>
+        )}
         <div className="mt-6">
           <Timeline step={step} cancelled={cancelled} />
         </div>
@@ -296,11 +303,14 @@ function Actions({
     refetchSoon(balance.refetch);
   }
 
-  const join = () =>
+  const join = (pick: number) =>
     act(async (step) => {
       await ensureAllowance(step, address!, contract, bet.takerStake, t.app.create.approving);
-      await step(t.bet.joining, (w) => w({ address: contract, abi: matchBetsAbi, functionName: "join", args: [id] }));
+      await step(t.bet.joining, (w) =>
+        w({ address: contract, abi: matchBetsAbi, functionName: "join", args: [id, pick] }),
+      );
     }, onJoined);
+  const pickLabel = (p: number) => (p === Pick.Home ? mt.wins(match.home) : p === Pick.Away ? mt.wins(match.away) : mt.draw);
   const cancel = () =>
     act(async (step) => {
       await step(t.bet.cancelling, (w) => w({ address: contract, abi: matchBetsAbi, functionName: "cancel", args: [id] }));
@@ -331,9 +341,16 @@ function Actions({
             <StarterKit kit={kit} need={bet.takerStake} />
           </div>
         )}
-        <button className="btn btn-primary w-full" disabled={busy || needsSetup} onClick={join}>
-          {send.busy ?? mt.join(fmtUsd(bet.takerStake))}
-        </button>
+        <div className="text-sm font-bold">{mt.yourChoice(fmtUsd(bet.takerStake))}</div>
+        <div className="mt-2 grid gap-2 sm:grid-cols-2">
+          {freePicks(bet.creatorPick).map((p) => (
+            <button key={p} className="btn btn-primary" disabled={busy || needsSetup} onClick={() => join(p)}>
+              <span className="rounded-md bg-black/15 px-1.5 py-0.5 text-xs">{PICK_SIGN[p]}</span>
+              {pickLabel(p)}
+            </button>
+          ))}
+        </div>
+        {send.busy && <p className="mt-2 text-sm text-muted">{send.busy}</p>}
         {notEnough && !kit.canClaim && !kit.needsGas && (
           <p className="mt-2 text-sm font-semibold text-bad">{t.app.create.tooMuch}</p>
         )}

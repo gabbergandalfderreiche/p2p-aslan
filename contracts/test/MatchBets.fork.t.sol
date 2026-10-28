@@ -50,9 +50,9 @@ contract MatchBetsForkTest is Test {
 
     function test_RealOracleConfirmsResultAndBetPays() public {
         vm.prank(alice);
-        uint256 id = bets.create(MATCH, MatchBets.Pick.Home, MatchBets.Pick.Other, 10e6, 10e6, address(0));
+        uint256 id = bets.create(MATCH, MatchBets.Pick.Home, 10e6, address(0));
         vm.prank(bob);
-        bets.join(id);
+        bets.join(id, MatchBets.Pick.Away);
 
         vm.warp(block.timestamp + 3 hours);
         vm.prank(bot);

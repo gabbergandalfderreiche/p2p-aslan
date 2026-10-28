@@ -13,8 +13,9 @@ import {IOptimisticOracleV3, IOptimisticOracleV3CallbackRecipient} from "./inter
 ///
 /// How it works:
 ///  - The curator lists matches (id from football-data.org, teams, kickoff). It cannot decide them.
-///  - Two people bet against each other on a match: the creator picks home / draw / away, the taker
-///    another outcome or "anything else". Each side puts in its own stake; nobody else is involved.
+///  - Two people bet against each other on a match with the same stake: the creator takes one of the
+///    three outcomes (home / draw / away), the taker one of the two that are left when joining.
+///    If the third outcome happens, both get their stake back. Nobody else is involved.
 ///  - After the match anyone (in practice our result bot) asserts the result to UMA with a bond.
 ///    If nobody disputes within the liveness period, the result stands. A dispute goes to UMA's
 ///    voters; a rejected assertion is cleared and the result can be asserted again.
@@ -42,8 +43,7 @@ contract MatchBets is Ownable2Step, ReentrancyGuard, IOptimisticOracleV3Callback
         None,
         Home,
         Draw,
-        Away,
-        Other // taker only: every result except the creator's pick
+        Away
     }
 
     enum Status {
@@ -78,8 +78,8 @@ contract MatchBets is Ownable2Step, ReentrancyGuard, IOptimisticOracleV3Callback
         uint96 creatorStake;
         // slot 1: invited opponent until someone joins (0 = anyone with the link), then the taker
         address taker;
-        uint96 takerStake;
-        // slot 2
+        uint96 takerStake; // always equal to creatorStake; kept separate so payouts read the same
+        // slot 2: takerPick stays None until someone joins
         uint64 matchId;
         Pick creatorPick;
         Pick takerPick;
@@ -276,35 +276,29 @@ contract MatchBets is Ownable2Step, ReentrancyGuard, IOptimisticOracleV3Callback
 
     // ---------------------------------------------------------------- bets
 
-    /// @notice Opens a bet on a match and pulls the creator's stake (approve `creatorStake` first).
-    /// @param takerPick Home / Draw / Away (different from `creatorPick`) or Other.
+    /// @notice Opens a bet on a match and pulls the stake (approve `stake` first).
+    /// @param creatorPick Home, Draw or Away.
     /// @param invited Only this address may take the bet; 0 lets anyone with the link take it.
-    function create(
-        uint64 matchId,
-        Pick creatorPick,
-        Pick takerPick,
-        uint96 creatorStake,
-        uint96 takerStake,
-        address invited
-    ) external nonReentrant returns (uint256 id) {
+    function create(uint64 matchId, Pick creatorPick, uint96 stake, address invited)
+        external
+        nonReentrant
+        returns (uint256 id)
+    {
         Match storage m = _matches[matchId];
         if (m.kickoff == 0) revert UnknownMatch();
         if (block.timestamp >= m.kickoff) revert TooLate();
-        if (creatorPick == Pick.None || creatorPick == Pick.Other || takerPick == Pick.None || takerPick == creatorPick) {
-            revert InvalidPick();
-        }
-        if (creatorStake == 0 || takerStake == 0) revert InvalidStake();
+        if (creatorPick == Pick.None) revert InvalidPick();
+        if (stake == 0) revert InvalidStake();
         if (invited == msg.sender) revert InvalidParticipants();
 
         id = ++betCount;
         Bet storage b = _bets[id];
         b.creator = msg.sender;
-        b.creatorStake = creatorStake;
+        b.creatorStake = stake;
         b.taker = invited;
-        b.takerStake = takerStake;
+        b.takerStake = stake;
         b.matchId = matchId;
         b.creatorPick = creatorPick;
-        b.takerPick = takerPick;
         b.status = Status.Open;
         b.feeBps = feeBps;
 
@@ -312,21 +306,24 @@ contract MatchBets is Ownable2Step, ReentrancyGuard, IOptimisticOracleV3Callback
         if (invited != address(0)) _betsOf[invited].push(id);
 
         emit BetCreated(id, matchId, msg.sender, invited);
-        token.safeTransferFrom(msg.sender, address(this), creatorStake);
+        token.safeTransferFrom(msg.sender, address(this), stake);
     }
 
-    /// @notice Takes the other side before kickoff and pulls `takerStake` (approve it first).
-    function join(uint256 id) external nonReentrant {
+    /// @notice Takes the bet before kickoff on one of the two outcomes the creator left free, with
+    ///         the same stake (approve it first).
+    function join(uint256 id, Pick takerPick) external nonReentrant {
         Bet storage b = _bets[id];
         if (b.status != Status.Open) revert WrongStatus();
         if (block.timestamp >= _matches[b.matchId].kickoff) revert TooLate();
         if (msg.sender == b.creator) revert NotAllowed();
+        if (takerPick == Pick.None || takerPick == b.creatorPick) revert InvalidPick();
         if (b.taker == address(0)) {
             b.taker = msg.sender;
             _betsOf[msg.sender].push(id);
         } else if (b.taker != msg.sender) {
             revert NotAllowed();
         }
+        b.takerPick = takerPick;
         b.status = Status.Active;
 
         emit BetJoined(id, msg.sender);
@@ -381,8 +378,8 @@ contract MatchBets is Ownable2Step, ReentrancyGuard, IOptimisticOracleV3Callback
         if (r == Result.None) return _timedOut(m) ? Payout.Refund : Payout.None;
         if (r == Result.Void) return Payout.Refund;
         if (uint8(r) == uint8(b.creatorPick)) return Payout.Creator;
-        if (b.takerPick == Pick.Other || uint8(r) == uint8(b.takerPick)) return Payout.Taker;
-        return Payout.Refund; // neither pick happened
+        if (uint8(r) == uint8(b.takerPick)) return Payout.Taker;
+        return Payout.Refund; // the third outcome, which nobody picked
     }
 
     // ---------------------------------------------------------------- admin

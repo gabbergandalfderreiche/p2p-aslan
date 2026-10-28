@@ -28,8 +28,8 @@ export const de = {
     ctaGuide: "Neu bei Krypto? Hier starten",
     stepsTitle: "So geht's",
     steps: [
-      { title: "Spiel wählen und tippen", text: "Zum Beispiel: „Bayern gewinnt.“ Du legst deinen Einsatz fest – und was dein Gegner setzt." },
-      { title: "Link schicken", text: "Dein Freund öffnet den Link und hält vor dem Anpfiff dagegen. Jetzt liegen beide Einsätze im Contract." },
+      { title: "Spiel wählen und tippen", text: "Du nimmst einen der drei Ausgänge – 1, X oder 2 – und legst den Einsatz fest." },
+      { title: "Link schicken", text: "Dein Freund wählt vor dem Anpfiff einen der beiden anderen Ausgänge und setzt gleich viel. Jetzt liegen beide Einsätze im Contract." },
       { title: "Automatisch auszahlen", text: "Nach dem Abpfiff wird das Ergebnis über UMA bestätigt. Der Gewinner bekommt den ganzen Topf, ohne dass jemand etwas melden muss." },
     ],
     rulesTitle: "Wer entscheidet, wer gewonnen hat?",
@@ -37,6 +37,7 @@ export const de = {
       "Ein Ergebnis-Bot holt das Resultat bei football-data.org und meldet es an UMA, ein unabhängiges Oracle. Dafür hinterlegt er eine Kaution.",
       "Zwei Stunden lang kann jeder widersprechen. Wer recht hat, bekommt einen Teil der Kaution des anderen; bei Streit stimmen die UMA-Teilnehmer ab.",
       "Es zählt das Ergebnis nach 90 Minuten plus Nachspielzeit – ohne Verlängerung und Elfmeterschiessen.",
+      "Kommt der dritte Ausgang, den keiner gewählt hat, bekommen beide ihren Einsatz zurück.",
       "Abgesagt, verschoben, abgebrochen oder kein bestätigtes Ergebnis innert 14 Tagen: Beide bekommen ihren Einsatz zurück.",
       "Nimmt niemand die Wette vor dem Anpfiff an, bekommst du deinen Einsatz zurück.",
     ],
@@ -173,15 +174,16 @@ export const de = {
     choose: "Spiel auswählen",
     change: "anderes Spiel",
     pick: "Worauf wettest du?",
-    opponentPick: "Und dein Gegner?",
     wins: (team: string) => `${team} gewinnt`,
     draw: "Unentschieden",
-    other: "Alles andere",
-    otherHint: "Dein Gegner gewinnt bei jedem anderen Ergebnis.",
-    neitherHint: "Kommt keines der beiden Ergebnisse, bekommt ihr beide euer Geld zurück.",
+    opponentChooses: (a: string, b: string) =>
+      `Dein Gegner wählt beim Annehmen einen der beiden anderen Ausgänge – „${a}“ oder „${b}“ – und setzt gleich viel. Tritt der dritte ein, bekommt ihr beide euer Geld zurück.`,
+    sameStake: "Dein Gegner setzt genau gleich viel.",
+    takerChooses: (a: string, b: string) => `wählt „${a}“ oder „${b}“`,
+    sameStakeShort: "gleicher Einsatz",
+    thirdRefund: (label: string) => `Kommt „${label}“, bekommen beide ihr Geld zurück.`,
+    yourChoice: (amount: string) => `Worauf wettest du? (${amount} tUSD)`,
     yourStake: "Dein Einsatz",
-    theirStake: "Einsatz des Gegners",
-    theirStakeHint: "Gleich viel ist fair bei ähnlichen Chancen. Bei „Alles andere“ kann dein Gegner mehr setzen.",
     opponent: "Gegner (optional)",
     kickoff: "Anpfiff",
     regularTime: "Es zählt das Ergebnis nach 90 Minuten plus Nachspielzeit – ohne Verlängerung und Elfmeterschiessen.",
@@ -211,7 +213,6 @@ export const de = {
       2: "Der Gegner hat gewonnen.",
       3: "Geld zurück an beide.",
     } as Record<number, string>,
-    join: (amount: string) => `Wette annehmen (${amount} tUSD)`,
     started: "Das Spiel hat begonnen – annehmen geht nicht mehr.",
     settle: "Jetzt auszahlen",
     settling: "Wird ausgezahlt …",
@@ -243,8 +244,8 @@ export const de = {
     shareText: (home: string, away: string) => `Wettest du gegen mich? ${home} – ${away}, nur Spielgeld:`,
     position: {
       mine: (stake: string, pick: string) => `Du setzt ${stake} auf „${pick}“.`,
-      offer: (stake: string, pick: string, pot: string) =>
-        `Halte dagegen: Setz ${stake} auf „${pick}“ und hol dir den Topf von ${pot}.`,
+      offer: (stake: string, a: string, b: string, pot: string) =>
+        `Halte dagegen: Wähle „${a}“ oder „${b}“, setz ${stake} und hol dir den Topf von ${pot}.`,
       watching: "Diese Wette läuft zwischen zwei anderen Personen.",
       notTaken: "Niemand hat diese Wette vor dem Anpfiff angenommen.",
       waitOpponent: "Jetzt fehlt nur noch ein Gegner. Wer traut sich? Schick den Link!",
@@ -272,6 +273,7 @@ export const de = {
     take: "Ansehen & annehmen",
     view: "Ansehen",
     yours: "deine Wette",
+    or: "oder",
   },
 
   uma: {

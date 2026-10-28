@@ -57,9 +57,9 @@ contract MatchBetsTest is Test {
 
     function _bet(MatchBets.Pick c, MatchBets.Pick t) internal returns (uint256 id) {
         vm.prank(alice);
-        id = bets.create(MATCH, c, t, STAKE, STAKE, address(0));
+        id = bets.create(MATCH, c, STAKE, address(0));
         vm.prank(bob);
-        bets.join(id);
+        bets.join(id, t);
     }
 
     function _confirm(MatchBets.Result r) internal returns (bytes32 id) {
@@ -165,55 +165,61 @@ contract MatchBetsTest is Test {
 
     function test_CreateAndJoin() public {
         vm.prank(alice);
-        uint256 id = bets.create(MATCH, MatchBets.Pick.Home, MatchBets.Pick.Other, 10e6, 5e6, address(0));
+        uint256 id = bets.create(MATCH, MatchBets.Pick.Home, 10e6, address(0));
         assertEq(usd.balanceOf(address(bets)), 10e6);
+        assertEq(uint8(bets.getBet(id).takerPick), uint8(MatchBets.Pick.None)); // chosen by the taker
         vm.prank(bob);
-        bets.join(id);
+        bets.join(id, MatchBets.Pick.Draw);
         MatchBets.Bet memory b = bets.getBet(id);
         assertEq(b.taker, bob);
+        assertEq(uint8(b.takerPick), uint8(MatchBets.Pick.Draw));
+        assertEq(b.takerStake, 10e6);
         assertEq(uint8(b.status), uint8(MatchBets.Status.Active));
-        assertEq(usd.balanceOf(address(bets)), 15e6);
+        assertEq(usd.balanceOf(address(bets)), 20e6); // same stake on both sides
         assertEq(bets.betsOf(bob)[0], id);
     }
 
     function test_CreateRules() public {
         vm.startPrank(alice);
         vm.expectRevert(MatchBets.UnknownMatch.selector);
-        bets.create(1, MatchBets.Pick.Home, MatchBets.Pick.Away, STAKE, STAKE, address(0));
+        bets.create(1, MatchBets.Pick.Home, STAKE, address(0));
         vm.expectRevert(MatchBets.InvalidPick.selector);
-        bets.create(MATCH, MatchBets.Pick.Home, MatchBets.Pick.Home, STAKE, STAKE, address(0));
-        vm.expectRevert(MatchBets.InvalidPick.selector);
-        bets.create(MATCH, MatchBets.Pick.Other, MatchBets.Pick.Home, STAKE, STAKE, address(0));
-        vm.expectRevert(MatchBets.InvalidPick.selector);
-        bets.create(MATCH, MatchBets.Pick.Home, MatchBets.Pick.None, STAKE, STAKE, address(0));
+        bets.create(MATCH, MatchBets.Pick.None, STAKE, address(0));
         vm.expectRevert(MatchBets.InvalidStake.selector);
-        bets.create(MATCH, MatchBets.Pick.Home, MatchBets.Pick.Away, 0, STAKE, address(0));
+        bets.create(MATCH, MatchBets.Pick.Home, 0, address(0));
         vm.expectRevert(MatchBets.InvalidParticipants.selector);
-        bets.create(MATCH, MatchBets.Pick.Home, MatchBets.Pick.Away, STAKE, STAKE, alice);
+        bets.create(MATCH, MatchBets.Pick.Home, STAKE, alice);
         vm.warp(kickoff);
         vm.expectRevert(MatchBets.TooLate.selector);
-        bets.create(MATCH, MatchBets.Pick.Home, MatchBets.Pick.Away, STAKE, STAKE, address(0));
+        bets.create(MATCH, MatchBets.Pick.Home, STAKE, address(0));
         vm.stopPrank();
     }
 
     function test_JoinRules() public {
         vm.prank(alice);
-        uint256 id = bets.create(MATCH, MatchBets.Pick.Home, MatchBets.Pick.Away, STAKE, STAKE, bob);
+        uint256 id = bets.create(MATCH, MatchBets.Pick.Home, STAKE, bob);
         vm.expectRevert(MatchBets.NotAllowed.selector);
         vm.prank(dave);
-        bets.join(id);
+        bets.join(id, MatchBets.Pick.Away);
         vm.expectRevert(MatchBets.NotAllowed.selector);
         vm.prank(alice);
-        bets.join(id);
+        bets.join(id, MatchBets.Pick.Away);
+        // The creator's outcome is taken, and a taker must pick something.
+        vm.expectRevert(MatchBets.InvalidPick.selector);
+        vm.prank(bob);
+        bets.join(id, MatchBets.Pick.Home);
+        vm.expectRevert(MatchBets.InvalidPick.selector);
+        vm.prank(bob);
+        bets.join(id, MatchBets.Pick.None);
         vm.warp(kickoff);
         vm.expectRevert(MatchBets.TooLate.selector);
         vm.prank(bob);
-        bets.join(id);
+        bets.join(id, MatchBets.Pick.Away);
     }
 
     function test_CancelOpenBet() public {
         vm.prank(alice);
-        uint256 id = bets.create(MATCH, MatchBets.Pick.Home, MatchBets.Pick.Away, STAKE, STAKE, address(0));
+        uint256 id = bets.create(MATCH, MatchBets.Pick.Home, STAKE, address(0));
         vm.expectRevert(MatchBets.NotAllowed.selector);
         vm.prank(dave);
         bets.cancel(id);
@@ -238,8 +244,8 @@ contract MatchBetsTest is Test {
         bets.settle(id);
     }
 
-    function test_SettleTakerWithOther() public {
-        uint256 id = _bet(MatchBets.Pick.Home, MatchBets.Pick.Other);
+    function test_SettleTakerWins() public {
+        uint256 id = _bet(MatchBets.Pick.Home, MatchBets.Pick.Draw);
         _confirm(MatchBets.Result.Draw);
         uint256 before = usd.balanceOf(bob);
         bets.settle(id);
@@ -256,8 +262,8 @@ contract MatchBetsTest is Test {
         assertEq(usd.balanceOf(bob), b + STAKE);
     }
 
-    function test_VoidRefundsEvenOther() public {
-        uint256 id = _bet(MatchBets.Pick.Home, MatchBets.Pick.Other);
+    function test_VoidRefunds() public {
+        uint256 id = _bet(MatchBets.Pick.Home, MatchBets.Pick.Draw);
         _confirm(MatchBets.Result.Void);
         assertEq(uint8(bets.payoutOf(id)), uint8(MatchBets.Payout.Refund));
     }
@@ -310,19 +316,18 @@ contract MatchBetsTest is Test {
     }
 
     /// Every combination of picks and results pays out exactly what came in.
-    function testFuzz_ConservesMoney(uint8 c, uint8 t, uint8 r, uint96 cs, uint96 ts, uint16 fee) public {
+    function testFuzz_ConservesMoney(uint8 c, uint8 t, uint8 r, uint96 stake, uint16 fee) public {
         MatchBets.Pick cp = MatchBets.Pick(bound(c, 1, 3));
-        MatchBets.Pick tp = MatchBets.Pick(bound(t, 1, 4));
+        MatchBets.Pick tp = MatchBets.Pick(bound(t, 1, 3));
         vm.assume(tp != cp);
-        cs = uint96(bound(cs, 1, 50e6));
-        ts = uint96(bound(ts, 1, 50e6));
+        stake = uint96(bound(stake, 1, 50e6));
         vm.prank(owner);
         bets.setFee(uint16(bound(fee, 0, 200)), treasury);
 
         vm.prank(alice);
-        uint256 id = bets.create(MATCH, cp, tp, cs, ts, address(0));
+        uint256 id = bets.create(MATCH, cp, stake, address(0));
         vm.prank(bob);
-        bets.join(id);
+        bets.join(id, tp);
         _confirm(MatchBets.Result(bound(r, 1, 4)));
         bets.settle(id);
 

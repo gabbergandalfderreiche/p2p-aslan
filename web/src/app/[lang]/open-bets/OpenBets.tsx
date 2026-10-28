@@ -5,9 +5,10 @@ import Link from "next/link";
 import { zeroAddress } from "viem";
 import { useConnection, useReadContract, useReadContracts } from "wagmi";
 import { LeagueFilter } from "@/components/LeagueFilter";
+import { TeamBadge } from "../match-bet/MatchBetParts";
 import { betEscrowAbi, matchBetsAbi } from "@/generated/contracts";
 import { DEPLOYMENT, fmtUsd, Status, TOKEN_SYMBOL, type Bet } from "@/lib/bets";
-import { groupByLeague, MATCH_BETS, MatchStatus, Pick, useMatches, type MatchBet } from "@/lib/matches";
+import { freePicks, groupByLeague, MATCH_BETS, MatchStatus, Pick, useMatches, type MatchBet } from "@/lib/matches";
 import { fmtDate, useNow } from "@/lib/time";
 import { useT } from "@/i18n/client";
 
@@ -71,7 +72,7 @@ export function OpenBets() {
 
   const loading = matchesLoading || matchBets.isLoading || customBets.isLoading;
   const pickLabel = (p: number, home: string, away: string) =>
-    p === Pick.Home ? mt.wins(home) : p === Pick.Away ? mt.wins(away) : p === Pick.Draw ? mt.draw : mt.other;
+    p === Pick.Home ? mt.wins(home) : p === Pick.Away ? mt.wins(away) : mt.draw;
 
   return (
     <div>
@@ -102,8 +103,10 @@ export function OpenBets() {
                         <span className="num">{fmtDate(match.kickoff, locale)}</span>
                         {mine && <span className="font-bold text-accent-ink">{o.yours}</span>}
                       </div>
-                      <div className="mt-1 font-display text-lg font-extrabold">
+                      <div className="mt-1 flex items-center gap-2 font-display text-lg font-extrabold">
+                        <TeamBadge name={match.home} size={24} />
                         {match.home} – {match.away}
+                        <TeamBadge name={match.away} size={24} />
                       </div>
                       <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
                         <div className="rounded-xl bg-surface-2 p-2.5">
@@ -115,16 +118,18 @@ export function OpenBets() {
                         </div>
                         <div className="rounded-xl border border-accent/60 p-2.5">
                           <div className="text-[11px] text-muted">{o.youBet}</div>
-                          <div className="font-bold">{pickLabel(bet.takerPick, match.home, match.away)}</div>
+                          <div className="font-bold">
+                            {freePicks(bet.creatorPick)
+                              .map((p) => pickLabel(p, match.home, match.away))
+                              .join(` ${o.or} `)}
+                          </div>
                           <div className="num text-xs text-muted">
                             {fmtUsd(bet.takerStake)} {TOKEN_SYMBOL}
                           </div>
                         </div>
                       </div>
                       <div className="mt-3 flex items-center justify-between gap-3 text-sm">
-                        <span className="num text-muted">
-                          {o.win(fmtUsd(bet.creatorStake + bet.takerStake))}
-                        </span>
+                        <span className="num text-muted">{o.win(fmtUsd(bet.creatorStake + bet.takerStake))}</span>
                         <span className="font-bold text-accent-ink">{mine ? o.view : o.take} →</span>
                       </div>
                     </Link>

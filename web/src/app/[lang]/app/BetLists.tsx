@@ -104,7 +104,7 @@ function useMatchItems(user?: Address) {
       href: `/match-bet?id=${id}`,
       number: t.matches.number(String(id)),
       title: `${m.home} – ${m.away}`,
-      stake: `${fmtUsd(b.creatorStake)} / ${fmtUsd(b.takerStake)} ${TOKEN_SYMBOL}`,
+      stake: `${fmtUsd(b.creatorStake)} ${TOKEN_SYMBOL} ${t.bet.stake.toLowerCase()}`,
       status: t.matches.status[b.status],
       tone: b.status === MatchStatus.Open ? "open" : b.status === MatchStatus.Active ? "active" : "done",
       role,

@@ -8,7 +8,7 @@ export const MATCH_BETS = DEPLOYMENT?.matchBets;
 
 /** Same order as the enums in MatchBets.sol. */
 export const Result = { None: 0, Home: 1, Draw: 2, Away: 3, Void: 4 } as const;
-export const Pick = { None: 0, Home: 1, Draw: 2, Away: 3, Other: 4 } as const;
+export const Pick = { None: 0, Home: 1, Draw: 2, Away: 3 } as const;
 export const MatchStatus = { None: 0, Open: 1, Active: 2, Settled: 3, Cancelled: 4 } as const;
 export const Payout = { None: 0, Creator: 1, Taker: 2, Refund: 3 } as const;
 export type PickValue = (typeof Pick)[keyof typeof Pick];
@@ -81,11 +81,16 @@ export function useMatch(id: bigint | undefined) {
   });
 }
 
-/** Which result makes the taker win, for display. */
-export function takerWinsOn(bet: { creatorPick: number; takerPick: number }) {
-  if (bet.takerPick === Pick.Other) return [Pick.Home, Pick.Draw, Pick.Away].filter((p) => p !== bet.creatorPick);
-  return [bet.takerPick];
-}
+/** The three outcomes in the usual 1 / X / 2 order. */
+export const PICKS = [Pick.Home, Pick.Draw, Pick.Away] as const;
+export const PICK_SIGN: Record<number, string> = { [Pick.Home]: "1", [Pick.Draw]: "X", [Pick.Away]: "2" };
+
+/** The two outcomes the creator left for the opponent. */
+export const freePicks = (creatorPick: number) => PICKS.filter((p) => p !== creatorPick);
+
+/** The outcome nobody picked; if it happens, both get their stake back. */
+export const unpicked = (bet: { creatorPick: number; takerPick: number }) =>
+  PICKS.find((p) => p !== bet.creatorPick && p !== bet.takerPick);
 
 /** Dispute window of a result report in seconds (2 h on Base Sepolia, 60 s locally). */
 export function useLiveness() {

@@ -30,8 +30,8 @@ export const en: Dictionary = {
     ctaGuide: "New to crypto? Start here",
     stepsTitle: "How it works",
     steps: [
-      { title: "Pick a match", text: "For example: “Bayern wins.” You set your stake – and what your opponent puts in." },
-      { title: "Send the link", text: "Your friend opens the link and bets against you before kickoff. Now both stakes sit in the contract." },
+      { title: "Pick a match", text: "You take one of the three outcomes – 1, X or 2 – and set the stake." },
+      { title: "Send the link", text: "Before kickoff your friend picks one of the two other outcomes and puts in the same amount. Now both stakes sit in the contract." },
       { title: "Automatic payout", text: "After the final whistle the result is confirmed through UMA. The winner gets the whole pot, nobody has to report anything." },
     ],
     rulesTitle: "Who decides who won?",
@@ -39,6 +39,7 @@ export const en: Dictionary = {
       "A result bot fetches the score from football-data.org and reports it to UMA, an independent oracle, putting down a bond.",
       "For two hours anyone can dispute it. Whoever is right gets part of the other's bond; in a dispute UMA's participants vote.",
       "The result after 90 minutes plus stoppage time counts – no extra time, no penalties.",
+      "If the third outcome happens, the one nobody picked, both get their stake back.",
       "Cancelled, postponed, abandoned or no confirmed result within 14 days: both get their stake back.",
       "If nobody takes the bet before kickoff, you get your stake back.",
     ],
@@ -175,15 +176,16 @@ export const en: Dictionary = {
     choose: "Choose a match",
     change: "other match",
     pick: "What do you bet on?",
-    opponentPick: "And your opponent?",
     wins: (team: string) => `${team} wins`,
     draw: "Draw",
-    other: "Anything else",
-    otherHint: "Your opponent wins on every other result.",
-    neitherHint: "If neither result happens, you both get your money back.",
+    opponentChooses: (a: string, b: string) =>
+      `When accepting, your opponent picks one of the two other outcomes – “${a}” or “${b}” – with the same stake. If the third one happens, you both get your money back.`,
+    sameStake: "Your opponent puts in exactly the same amount.",
+    takerChooses: (a: string, b: string) => `picks “${a}” or “${b}”`,
+    sameStakeShort: "same stake",
+    thirdRefund: (label: string) => `If it ends “${label}”, both get their money back.`,
+    yourChoice: (amount: string) => `What do you bet on? (${amount} tUSD)`,
     yourStake: "Your stake",
-    theirStake: "Opponent's stake",
-    theirStakeHint: "The same amount is fair for similar chances. With “Anything else” your opponent can put in more.",
     opponent: "Opponent (optional)",
     kickoff: "Kickoff",
     regularTime: "The result after 90 minutes plus stoppage time counts – no extra time, no penalties.",
@@ -212,7 +214,6 @@ export const en: Dictionary = {
       2: "The opponent won.",
       3: "Money back to both.",
     } as Record<number, string>,
-    join: (amount: string) => `Accept the bet (${amount} tUSD)`,
     started: "The match has started – the bet can no longer be accepted.",
     settle: "Pay out now",
     settling: "Paying out …",
@@ -244,8 +245,8 @@ export const en: Dictionary = {
     shareText: (home: string, away: string) => `Will you bet against me? ${home} – ${away}, play money only:`,
     position: {
       mine: (stake: string, pick: string) => `You stake ${stake} on “${pick}”.`,
-      offer: (stake: string, pick: string, pot: string) =>
-        `Bet against it: stake ${stake} on “${pick}” and win the pot of ${pot}.`,
+      offer: (stake: string, a: string, b: string, pot: string) =>
+        `Bet against it: pick “${a}” or “${b}”, stake ${stake} and win the pot of ${pot}.`,
       watching: "This bet runs between two other people.",
       notTaken: "Nobody accepted this bet before kickoff.",
       waitOpponent: "Now you only need an opponent. Who dares? Send the link!",
@@ -273,6 +274,7 @@ export const en: Dictionary = {
     take: "View & accept",
     view: "View",
     yours: "your bet",
+    or: "or",
   },
 
   uma: {

@@ -9,8 +9,9 @@ import { TxStatus } from "@/components/AppFrame";
 import { useConnectModal } from "@/components/ConnectModal";
 import { matchBetsAbi } from "@/generated/contracts";
 import { parseUsd, TOKEN_SYMBOL, useTokenBalance } from "@/lib/bets";
-import { groupByLeague, MATCH_BETS, Pick, Result, useMatches, type Match, type PickValue } from "@/lib/matches";
+import { freePicks, groupByLeague, MATCH_BETS, Pick, PICK_SIGN, PICKS, Result, useMatches, type Match, type PickValue } from "@/lib/matches";
 import { LeagueFilter } from "@/components/LeagueFilter";
+import { TeamBadge } from "../match-bet/MatchBetParts";
 import { fmtDate, useNow } from "@/lib/time";
 import { refetchSoon } from "@/lib/tx";
 import { ensureAllowance, useSend } from "@/lib/useSend";
@@ -60,8 +61,10 @@ export function MatchBetForm() {
                     onClick={() => setSelected(m.id)}
                     className="flex w-full items-center justify-between gap-3 rounded-2xl border border-line px-4 py-2.5 text-left hover:border-accent"
                   >
-                    <span className="font-bold">
+                    <span className="flex items-center gap-2 font-bold">
+                      <TeamBadge name={m.home} size={20} />
                       {m.home} – {m.away}
+                      <TeamBadge name={m.away} size={20} />
                     </span>
                     <span className="num shrink-0 text-xs text-muted">{fmtDate(m.kickoff, locale)}</span>
                   </button>
@@ -86,21 +89,13 @@ function Form({ match, onBack }: { match: Listed; onBack: () => void }) {
   const balance = useTokenBalance(address);
 
   const [mine, setMine] = useState<PickValue>(Pick.Home);
-  const [theirs, setTheirs] = useState<PickValue>(Pick.Away);
   const [stake, setStake] = useState("10");
-  const [theirStake, setTheirStake] = useState<string | null>(null); // null = same as mine
   const [opponent, setOpponent] = useState("");
 
-  const label = (p: number) => (p === Pick.Home ? mt.wins(match.home) : p === Pick.Away ? mt.wins(match.away) : p === Pick.Draw ? mt.draw : mt.other);
+  const label = (p: number) => (p === Pick.Home ? mt.wins(match.home) : p === Pick.Away ? mt.wins(match.away) : mt.draw);
   const myAmount = parseUsd(stake);
-  const theirText = theirStake ?? stake;
-  const theirAmount = parseUsd(theirText);
   const opp = opponent.trim();
-
-  function chooseMine(p: PickValue) {
-    setMine(p);
-    if (theirs === p) setTheirs(Pick.Other);
-  }
+  const [freeA, freeB] = freePicks(mine);
 
   const problem =
     opp && !isAddress(opp)
@@ -110,7 +105,7 @@ function Form({ match, onBack }: { match: Listed; onBack: () => void }) {
         : address && balance.data !== undefined && myAmount > balance.data
           ? c.tooMuch
           : null;
-  const canSubmit = Boolean(address) && !send.busy && myAmount > 0n && theirAmount > 0n && !problem;
+  const canSubmit = Boolean(address) && !send.busy && myAmount > 0n && !problem;
 
   async function submit() {
     if (!address || !MATCH_BETS) return;
@@ -123,7 +118,7 @@ function Form({ match, onBack }: { match: Listed; onBack: () => void }) {
           address: contract,
           abi: matchBetsAbi,
           functionName: "create",
-          args: [match.id, mine, theirs, myAmount, theirAmount, (opp || zeroAddress) as Address],
+          args: [match.id, mine, myAmount, (opp || zeroAddress) as Address],
         }),
       );
       const receipt = await getTransactionReceipt(wagmiConfig, { hash });
@@ -150,15 +145,10 @@ function Form({ match, onBack }: { match: Listed; onBack: () => void }) {
         </div>
       </div>
 
-      <Choice title={mt.pick} options={[Pick.Home, Pick.Draw, Pick.Away]} value={mine} onChange={chooseMine} label={label} />
-      <Choice
-        title={mt.opponentPick}
-        options={([Pick.Home, Pick.Draw, Pick.Away, Pick.Other] as PickValue[]).filter((p) => p !== mine)}
-        value={theirs}
-        onChange={setTheirs}
-        label={label}
-      />
-      <p className="mt-1 text-xs text-muted">{theirs === Pick.Other ? mt.otherHint : mt.neitherHint}</p>
+      <Choice title={mt.pick} options={[...PICKS]} value={mine} onChange={setMine} label={label} />
+      <p className="mt-2 rounded-xl bg-surface-2 px-3 py-2 text-xs leading-relaxed text-muted">
+        {mt.opponentChooses(label(freeA), label(freeB))}
+      </p>
 
       <div className="mt-4 grid gap-4 sm:grid-cols-2">
         <div>
@@ -178,14 +168,7 @@ function Form({ match, onBack }: { match: Listed; onBack: () => void }) {
             <span className="text-sm text-muted">{TOKEN_SYMBOL}</span>
           </div>
         </div>
-        <label className="block">
-          <span className="text-sm font-bold">{mt.theirStake}</span>
-          <div className="mt-2 flex items-center gap-2">
-            <input className="field num !w-24" inputMode="decimal" value={theirText} onChange={(e) => setTheirStake(e.target.value)} />
-            <span className="text-sm text-muted">{TOKEN_SYMBOL}</span>
-          </div>
-          <span className="block text-xs text-muted">{mt.theirStakeHint}</span>
-        </label>
+        <div className="text-sm text-muted sm:self-end">{mt.sameStake}</div>
         <label className="block sm:col-span-2">
           <span className="text-sm font-bold">{mt.opponent}</span>
           <input className="field mt-2 font-mono text-xs" placeholder="0x…" value={opponent} onChange={(e) => setOpponent(e.target.value)} />
@@ -234,6 +217,7 @@ function Choice({
             onClick={() => onChange(p)}
             className={`rounded-2xl border px-3 py-2.5 text-sm font-bold ${value === p ? "border-accent bg-accent text-on-accent" : "border-line hover:border-accent"}`}
           >
+            <span className="mr-1.5 rounded-md bg-black/10 px-1.5 py-0.5 text-xs">{PICK_SIGN[p]}</span>
             {label(p)}
           </button>
         ))}

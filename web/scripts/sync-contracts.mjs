@@ -30,6 +30,7 @@ export type Deployment = {
   timelock: \`0x\${string}\`;
   escrow: \`0x\${string}\`;
   matchBets?: \`0x\${string}\`;
+  matchBetsPrevious?: \`0x\${string}\`;
   oracle?: \`0x\${string}\`;
   bondCurrency?: \`0x\${string}\`;
 };
