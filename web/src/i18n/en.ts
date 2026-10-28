@@ -122,6 +122,12 @@ export const en: Dictionary = {
       gasCooldown: "You already got test ETH today. More tomorrow.",
       gasOff: "That doesn't work right now. Alternatively in the Phantom app:",
       gasLink: "Superchain faucet ↗",
+      kitTitle: "Starter balance",
+      kitBoth: "Test ETH for fees and 100 tUSD play money – free, in one click.",
+      kitGas: "Test ETH for fees – free, in one click.",
+      kitTokens: "100 tUSD play money – free, once a day.",
+      kitButton: "Get starter balance",
+      kitDone: "Your starter balance arrived!",
     },
 
     create: {

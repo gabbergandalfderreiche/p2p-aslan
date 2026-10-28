@@ -28,6 +28,8 @@ import { addressUrl } from "@/lib/network";
 import { fmtDate, useNow } from "@/lib/time";
 import { refetchSoon } from "@/lib/tx";
 import { ensureAllowance, useSend } from "@/lib/useSend";
+import { useStarterKit } from "@/lib/useStarterKit";
+import { StarterKit } from "@/components/StarterKit";
 import { useT } from "@/i18n/client";
 
 export function BetView() {
@@ -231,7 +233,9 @@ function Actions({
 
   const won = role === "creator" ? Outcome.Creator : Outcome.Taker;
   const lost = role === "creator" ? Outcome.Taker : Outcome.Creator;
-  const notEnough = balance.data !== undefined && balance.data < bet.stake;
+  const kit = useStarterKit(address);
+  const notEnough = kit.balance < bet.stake;
+  const needsSetup = kit.needsGas || notEnough;
 
   let body: ReactNode = null;
   if (!address && (bet.status === Status.Open || bet.status === Status.Active || bet.status === Status.Disputed)) {
@@ -243,10 +247,17 @@ function Actions({
   } else if (can.join) {
     body = (
       <>
-        <button className="btn btn-primary w-full" disabled={busy || notEnough} onClick={join}>
+        {needsSetup && (
+          <div className="mb-3">
+            <StarterKit kit={kit} need={bet.stake} />
+          </div>
+        )}
+        <button className="btn btn-primary w-full" disabled={busy || needsSetup} onClick={join}>
           {send.busy ?? b.join(fmtUsd(bet.stake))}
         </button>
-        {notEnough && <p className="mt-2 text-sm font-semibold text-bad">{t.app.create.tooMuch}</p>}
+        {notEnough && !kit.canClaim && !kit.needsGas && (
+          <p className="mt-2 text-sm font-semibold text-bad">{t.app.create.tooMuch}</p>
+        )}
       </>
     );
   } else if (can.report) {

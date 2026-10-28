@@ -120,6 +120,12 @@ export const de = {
       gasCooldown: "Du hast heute schon Test-ETH bekommen. Morgen gibt's wieder.",
       gasOff: "Das geht gerade nicht. Alternativ in der Phantom-App:",
       gasLink: "Superchain-Faucet ↗",
+      kitTitle: "Startguthaben",
+      kitBoth: "Test-ETH für die Gebühren und 100 tUSD Spielgeld – gratis, mit einem Klick.",
+      kitGas: "Test-ETH für die Gebühren – gratis, mit einem Klick.",
+      kitTokens: "100 tUSD Spielgeld – gratis, einmal pro Tag.",
+      kitButton: "Startguthaben holen",
+      kitDone: "Startguthaben ist da!",
     },
 
     create: {

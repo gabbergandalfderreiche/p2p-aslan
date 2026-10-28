@@ -28,6 +28,8 @@ import {
 import { fmtDate, useNow } from "@/lib/time";
 import { refetchSoon } from "@/lib/tx";
 import { ensureAllowance, useSend } from "@/lib/useSend";
+import { useStarterKit } from "@/lib/useStarterKit";
+import { StarterKit } from "@/components/StarterKit";
 import { useT } from "@/i18n/client";
 
 export function MatchBetView() {
@@ -244,7 +246,9 @@ function Actions({ id, bet, match, refetch }: { id: bigint; bet: MatchBet; match
     match.result === Result.None &&
     hasPendingResult(match) &&
     now >= match.assertedAt + liveness;
-  const notEnough = balance.data !== undefined && balance.data < bet.takerStake;
+  const kit = useStarterKit(address);
+  const notEnough = kit.balance < bet.takerStake;
+  const needsSetup = kit.needsGas || notEnough;
 
   async function act(run: Parameters<typeof send.run>[0]) {
     await send.run(run);
@@ -283,10 +287,17 @@ function Actions({ id, bet, match, refetch }: { id: bigint; bet: MatchBet; match
   } else if (canJoin) {
     body = (
       <>
-        <button className="btn btn-primary w-full" disabled={busy || notEnough} onClick={join}>
+        {needsSetup && (
+          <div className="mb-3">
+            <StarterKit kit={kit} need={bet.takerStake} />
+          </div>
+        )}
+        <button className="btn btn-primary w-full" disabled={busy || needsSetup} onClick={join}>
           {send.busy ?? mt.join(fmtUsd(bet.takerStake))}
         </button>
-        {notEnough && <p className="mt-2 text-sm font-semibold text-bad">{t.app.create.tooMuch}</p>}
+        {notEnough && !kit.canClaim && !kit.needsGas && (
+          <p className="mt-2 text-sm font-semibold text-bad">{t.app.create.tooMuch}</p>
+        )}
       </>
     );
   } else if (bet.status === MatchStatus.Open && !beforeKickoff && now > 0 && !isCreator) {
