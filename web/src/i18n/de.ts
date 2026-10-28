@@ -101,7 +101,7 @@ export const de = {
     loginFirst: "Melde dich an, um zu wetten.",
     cancelled: "Abgebrochen.",
     failed: "Das hat nicht geklappt. Bitte versuch es nochmal.",
-    noGas: "Dir fehlt Test-ETH für die Netzwerkgebühr. Hol dir gratis welches beim Faucet.",
+    noGas: "Dir fehlt Test-ETH für die Netzwerkgebühr. Tippe bei „Dein Spielgeld“ auf „Test-ETH gratis erhalten“.",
     viewTx: "Transaktion ansehen ↗",
 
     wallet: {
@@ -112,8 +112,13 @@ export const de = {
       faucetDone: "100 tUSD sind da!",
       faucetWait: (when: string) => `Nächstes Spielgeld ab ${when}`,
       gasTitle: "Kein Test-ETH?",
-      gasText: "Für jede Aktion fällt eine winzige Netzwerkgebühr in Test-ETH an. Das gibt es gratis beim Faucet.",
-      gasLink: "Test-ETH holen ↗",
+      gasText: "Für jede Aktion fällt eine winzige Netzwerkgebühr in Test-ETH an. Wir schicken dir gratis genug für die ersten Wetten.",
+      gasButton: "Test-ETH gratis erhalten",
+      gasBusy: "Wird geschickt …",
+      gasDone: "Test-ETH ist da – jetzt kannst du Spielgeld holen.",
+      gasCooldown: "Du hast heute schon Test-ETH bekommen. Morgen gibt's wieder.",
+      gasOff: "Das geht gerade nicht. Alternativ in der Phantom-App:",
+      gasLink: "Superchain-Faucet ↗",
     },
 
     create: {
@@ -287,8 +292,8 @@ export const de = {
         text: "Am einfachsten: In der App auf „Anmelden“ und „Mit Passkey anmelden“ tippen. Das geht mit Face ID oder Fingerabdruck, ohne App und ohne Merksätze. Alternativ die kostenlose Wallet Phantom (phantom.com).",
       },
       {
-        title: "Test-ETH für Gebühren holen",
-        text: "Jede Aktion kostet eine winzige Netzwerkgebühr in Test-ETH. Das gibt es gratis beim Faucet von Coinbase: Wallet-Adresse einfügen, „Base Sepolia“ wählen, fertig.",
+        title: "Test-ETH für Gebühren erhalten",
+        text: "Jede Aktion kostet eine winzige Netzwerkgebühr in Test-ETH. Die musst du nicht suchen: In der App auf „Test-ETH gratis erhalten“ tippen, wir schicken dir genug für die ersten Wetten.",
       },
       {
         title: "Spielgeld holen",
@@ -299,7 +304,6 @@ export const de = {
         text: "Spiel wählen, tippen, Einsatz festlegen, erstellen. Danach den Link an einen Freund schicken – er hält vor dem Anpfiff dagegen. Nach dem Spiel wird automatisch ausbezahlt.",
       },
     ],
-    faucet: "Zum Test-ETH-Faucet ↗",
     toApp: "Zur App",
   },
 

@@ -88,6 +88,12 @@ function German() {
         <li>
           <b>Browser-Wallets</b> (z. B. MetaMask): Es gelten die Datenschutzbestimmungen des jeweiligen Anbieters.
         </li>
+        <li>
+          <b>Test-ETH für Gebühren:</b> Wenn du auf „Test-ETH gratis erhalten“ tippst, sendet die App deine
+          Wallet-Adresse an unseren Server bei Vercel. Dieser schickt dir von unserer Wallet eine kleine Menge Test-ETH.
+          Adresse und IP-Adresse werden dabei nur kurz im Arbeitsspeicher gehalten, um Mehrfachanfragen innerhalb von
+          24 Stunden zu verhindern, und nicht dauerhaft gespeichert.
+        </li>
       </ul>
 
       <h2>Cookie und Speicher in deinem Browser</h2>
@@ -180,6 +186,11 @@ function English() {
         </li>
         <li>
           <b>Browser wallets</b> (e.g. MetaMask): the privacy terms of the respective provider apply.
+        </li>
+        <li>
+          <b>Test ETH for fees:</b> when you tap “Get free test ETH”, the app sends your wallet address to our server
+          at Vercel, which sends you a small amount of test ETH from our wallet. The address and IP address are only
+          kept briefly in memory to prevent repeated requests within 24 hours and are not stored permanently.
         </li>
       </ul>
 

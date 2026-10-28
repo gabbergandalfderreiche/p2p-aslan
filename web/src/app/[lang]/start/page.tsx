@@ -3,7 +3,6 @@ import Link from "next/link";
 import { SiteHeader } from "@/components/SiteHeader";
 import { LegalFooter } from "@/components/LegalFooter";
 import { BRAND } from "@/lib/brand";
-import { ETH_FAUCET } from "@/lib/network";
 import { localePath } from "@/i18n";
 import { getDictionary, getLocale } from "@/i18n/server";
 
@@ -39,11 +38,6 @@ export default async function StartPage() {
               <div>
                 <h2 className="text-lg font-bold">{s.title}</h2>
                 <p className="mt-1 text-sm leading-relaxed text-muted">{s.text}</p>
-                {i === 1 && (
-                  <a href={ETH_FAUCET} target="_blank" rel="noopener noreferrer" className="btn btn-ghost mt-3 !py-2 text-sm">
-                    {g.faucet}
-                  </a>
-                )}
               </div>
             </li>
           ))}

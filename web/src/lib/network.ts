@@ -25,5 +25,5 @@ const EXPLORER = NETWORK === "local" ? null : "https://sepolia.basescan.org";
 export const txUrl = (hash: string) => (EXPLORER ? `${EXPLORER}/tx/${hash}` : null);
 export const addressUrl = (address: string) => (EXPLORER ? `${EXPLORER}/address/${address}` : null);
 
-/** Free Base Sepolia test ETH for gas (Coinbase Developer Platform faucet). */
-export const ETH_FAUCET = "https://portal.cdp.coinbase.com/products/faucet";
+/** Fallback when our own drip (app/api/gas) is off: Superchain faucet, works from the Phantom app's browser. */
+export const ETH_FAUCET = "https://console.optimism.io/faucet";

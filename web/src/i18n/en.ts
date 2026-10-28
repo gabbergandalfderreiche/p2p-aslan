@@ -103,7 +103,7 @@ export const en: Dictionary = {
     loginFirst: "Sign in to bet.",
     cancelled: "Cancelled.",
     failed: "That didn't work. Please try again.",
-    noGas: "You need test ETH for the network fee. Get some for free from the faucet.",
+    noGas: "You need test ETH for the network fee. Tap “Get free test ETH” under “Your play money”.",
     viewTx: "View transaction ↗",
 
     wallet: {
@@ -114,8 +114,13 @@ export const en: Dictionary = {
       faucetDone: "100 tUSD arrived!",
       faucetWait: (when: string) => `Next play money from ${when}`,
       gasTitle: "No test ETH?",
-      gasText: "Every action costs a tiny network fee in test ETH. You can get it for free from the faucet.",
-      gasLink: "Get test ETH ↗",
+      gasText: "Every action costs a tiny network fee in test ETH. We send you enough for your first bets, for free.",
+      gasButton: "Get free test ETH",
+      gasBusy: "Sending …",
+      gasDone: "Test ETH arrived – now get your play money.",
+      gasCooldown: "You already got test ETH today. More tomorrow.",
+      gasOff: "That doesn't work right now. Alternatively in the Phantom app:",
+      gasLink: "Superchain faucet ↗",
     },
 
     create: {
@@ -289,7 +294,7 @@ export const en: Dictionary = {
       },
       {
         title: "Get test ETH for fees",
-        text: "Every action costs a tiny network fee in test ETH. You get it for free from the Coinbase faucet: paste your wallet address, pick “Base Sepolia”, done.",
+        text: "Every action costs a tiny network fee in test ETH. No need to hunt for it: tap “Get free test ETH” in the app and we send you enough for your first bets.",
       },
       {
         title: "Get play money",
@@ -300,7 +305,6 @@ export const en: Dictionary = {
         text: "Pick a match and a result, set the stakes, create it. Then send the link to a friend – they bet against you before kickoff. After the match the payout happens automatically.",
       },
     ],
-    faucet: "To the test ETH faucet ↗",
     toApp: "To the app",
   },
 
