@@ -157,6 +157,45 @@ body {
     repeating-linear-gradient(90deg, #1d6b3e 0 44px, #237a47 44px 88px);
 }
 
+@media (prefers-reduced-motion: no-preference) {
+  .live-dot {
+    animation: live-pulse 1.2s ease-in-out infinite;
+  }
+  .countdown-soon {
+    animation: countdown-beat 1s ease-in-out infinite;
+  }
+  .vs-glow {
+    animation: vs-glow 2.4s ease-in-out infinite;
+  }
+  .confetti-piece {
+    position: absolute;
+    top: -20px;
+    border-radius: 2px;
+    animation: confetti-fall 2.8s cubic-bezier(0.25, 0.6, 0.4, 1) forwards;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .confetti-piece {
+    display: none;
+  }
+}
+@keyframes live-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.35; transform: scale(0.7); }
+}
+@keyframes countdown-beat {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+}
+@keyframes vs-glow {
+  0%, 100% { text-shadow: 0 0 0 rgba(242, 165, 22, 0); }
+  50% { text-shadow: 0 0 18px rgba(242, 165, 22, 0.85); }
+}
+@keyframes confetti-fall {
+  0% { transform: translate(0, 0) rotate(0); opacity: 1; }
+  100% { transform: translate(var(--drift), 105vh) rotate(720deg); opacity: 0.9; }
+}
+
 /* Diagonal split behind the hero: one half per side of the bet. */
 .versus {
   background: linear-gradient(115deg, color-mix(in srgb, var(--accent) 16%, transparent) 50%, color-mix(in srgb, var(--accent-2) 12%, transparent) 50%);

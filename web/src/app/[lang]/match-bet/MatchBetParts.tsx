@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
 import type { Address } from "viem";
 import { fmtUsd, short, TOKEN_SYMBOL } from "@/lib/bets";
 import { addressUrl } from "@/lib/network";
@@ -35,19 +35,71 @@ export function TeamBadge({ name, size = 64 }: { name: string; size?: number }) 
   );
 }
 
-/** "in 2 h 13 min" / "live" / "full time", from kickoff and now (unix seconds). */
-export function useKickoffLabel(kickoff: number, now: number) {
+// A clock that ticks every second, for the countdown only (the rest of the page uses useNow).
+function subscribeSecond(onChange: () => void) {
+  const id = setInterval(onChange, 1000);
+  return () => clearInterval(id);
+}
+const secondNow = () => Math.floor(Date.now() / 1000);
+
+function useSecondClock() {
+  return useSyncExternalStore(subscribeSecond, secondNow, () => 0);
+}
+
+/** Rough match minute from kickoff: 1–45, half time, 46–90, then 90+. */
+function matchMinute(elapsed: number) {
+  const m = Math.floor(elapsed / 60) + 1;
+  if (m <= 47) return `${Math.min(m, 45)}'`;
+  if (m <= 62) return null; // half time
+  const second = m - 17;
+  return second > 90 ? "90+'" : `${second}'`;
+}
+
+/** Big ticking countdown before kickoff, pulsing LIVE badge during the match, full time after. */
+export function Countdown({ kickoff }: { kickoff: number }) {
   const { t } = useT();
   const c = t.matches.countdown;
-  if (!now) return "";
+  const now = useSecondClock();
+  if (!now) return <div className="h-14" />;
+
   const left = kickoff - now;
   if (left > 0) {
-    const d = Math.floor(left / 86_400);
-    const h = Math.floor((left % 86_400) / 3600);
-    const m = Math.floor((left % 3600) / 60);
-    return c.in(d, h, m);
+    const parts = [
+      [Math.floor(left / 86_400), c.days],
+      [Math.floor((left % 86_400) / 3600), c.hours],
+      [Math.floor((left % 3600) / 60), c.minutes],
+      [left % 60, c.seconds],
+    ] as const;
+    const soon = left < 3600;
+    return (
+      <div className="flex flex-col items-center">
+        <div className={`flex gap-1.5 ${soon ? "countdown-soon" : ""}`}>
+          {parts.map(([value, label], i) =>
+            i === 0 && value === 0 ? null : (
+              <div key={label} className="min-w-11 rounded-lg bg-black/45 px-1.5 py-1 text-center">
+                <div className="num font-display text-xl font-extrabold leading-none">{String(value).padStart(2, "0")}</div>
+                <div className="mt-0.5 text-[9px] font-bold uppercase tracking-wide opacity-75">{label}</div>
+              </div>
+            ),
+          )}
+        </div>
+        <div className="mt-1 text-[11px] font-bold uppercase tracking-wide opacity-80">{c.untilKickoff}</div>
+      </div>
+    );
   }
-  return now < kickoff + 2 * 3600 ? c.live : c.over;
+  if (now < kickoff + 2 * 3600) {
+    const minute = matchMinute(now - kickoff);
+    return (
+      <div className="flex flex-col items-center gap-1">
+        <span className="flex items-center gap-1.5 rounded-full bg-accent-2 px-3 py-1 text-sm font-extrabold text-white">
+          <span className="live-dot h-2 w-2 rounded-full bg-white" />
+          LIVE {minute ?? c.halfTime}
+        </span>
+        <span className="text-[11px] font-bold opacity-80">{c.fingersCrossed}</span>
+      </div>
+    );
+  }
+  return <span className="rounded-full bg-black/40 px-3 py-1 text-sm font-extrabold">{c.over}</span>;
 }
 
 /** Stadium-style header: pitch, both teams, kickoff countdown and the pot. */
@@ -71,7 +123,6 @@ export function Scoreboard({
   score: string | null;
 }) {
   const { t, locale } = useT();
-  const label = useKickoffLabel(kickoff, now);
   const live = now >= kickoff && now < kickoff + 2 * 3600;
   return (
     <section className="pitch relative overflow-hidden rounded-[22px] px-5 pb-6 pt-4 text-white shadow-lg">
@@ -93,13 +144,11 @@ export function Scoreboard({
         </div>
         <div className="flex flex-col items-center text-center">
           {score ? (
-            <span className="font-display text-3xl font-extrabold drop-shadow">{score}</span>
+            <span className="font-display text-2xl font-extrabold drop-shadow">{score}</span>
           ) : (
-            <span className="font-display text-3xl font-extrabold opacity-90 drop-shadow">VS</span>
+            <span className={`vs-glow font-display text-4xl font-extrabold drop-shadow ${live ? "text-accent" : ""}`}>VS</span>
           )}
-          <span className={`mt-1 rounded-full px-2 py-0.5 text-xs font-bold ${live ? "bg-accent-2 text-white" : "bg-black/30"}`}>
-            {label}
-          </span>
+          <div className="mt-2">{!score && <Countdown kickoff={kickoff} />}</div>
           <span className="num mt-1 text-[11px] opacity-80">{fmtDate(kickoff, locale)}</span>
         </div>
         <div className="flex flex-col items-center gap-2 text-center">
@@ -258,4 +307,55 @@ export function Position({ tone, children }: { tone: "accent" | "good" | "muted"
     bad: "border-accent-2 bg-accent-2/10",
   };
   return <div className={`rounded-2xl border-2 p-4 text-base font-semibold leading-snug ${styles[tone]}`}>{children}</div>;
+}
+
+const CONFETTI_COLOURS = ["#f0a73a", "#c4472b", "#f6e4c3", "#2e7d5b", "#ffffff"];
+
+/** Short burst of confetti over the page; `trigger` changes start a new burst. */
+export function Confetti({ trigger }: { trigger: number }) {
+  const [shown, setShown] = useState(0);
+  useEffect(() => {
+    if (!trigger) return;
+    const start = setTimeout(() => setShown(trigger), 0);
+    const end = setTimeout(() => setShown(0), 3500);
+    return () => {
+      clearTimeout(start);
+      clearTimeout(end);
+    };
+  }, [trigger]);
+  if (!shown) return null;
+  return (
+    <div className="pointer-events-none fixed inset-0 z-50 overflow-hidden" aria-hidden>
+      {Array.from({ length: 48 }, (_, i) => {
+        const left = (i * 37) % 100;
+        const delay = (i % 12) * 0.06;
+        const size = 6 + (i % 4) * 2;
+        return (
+          <span
+            key={`${shown}-${i}`}
+            className="confetti-piece"
+            style={{
+              left: `${left}%`,
+              width: size,
+              height: size * 1.6,
+              background: CONFETTI_COLOURS[i % CONFETTI_COLOURS.length],
+              animationDelay: `${delay}s`,
+              ["--drift" as string]: `${((i % 7) - 3) * 18}px`,
+            }}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
+/** "You vs. them" divider between the two slips. */
+export function DuelDivider() {
+  return (
+    <div className="pointer-events-none absolute left-1/2 top-1/2 z-10 hidden -translate-x-1/2 -translate-y-1/2 sm:block">
+      <span className="vs-glow grid h-12 w-12 place-items-center rounded-full border-2 border-accent bg-surface font-display text-lg font-extrabold text-accent-ink shadow-lg">
+        VS
+      </span>
+    </div>
+  );
 }

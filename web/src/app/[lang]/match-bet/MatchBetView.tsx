@@ -1,13 +1,13 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { zeroAddress } from "viem";
 import { useConnection, useReadContract } from "wagmi";
 import { TxStatus } from "@/components/AppFrame";
 import { useConnectModal } from "@/components/ConnectModal";
-import { Position, Scoreboard, ShareCard, Slip, Timeline } from "./MatchBetParts";
+import { Confetti, DuelDivider, Position, Scoreboard, ShareCard, Slip, Timeline } from "./MatchBetParts";
 import { matchBetsAbi } from "@/generated/contracts";
 import { fmtUsd, TOKEN_SYMBOL, useTokenBalance } from "@/lib/bets";
 import {
@@ -94,7 +94,16 @@ function Details({ id, bet, match, isNew, refetch }: { id: bigint; bet: MatchBet
   const timedOut = now > match.kickoff + RESULT_TIMEOUT && !resultKnown;
 
   // 0 created, 1 opponent in, 2 kicked off, 3 result reported/confirmed, 4 paid out
-  const step = settled ? 5 : resultKnown || hasPendingResult(match) ? 3 : bet.status === MatchStatus.Active ? (kicked ? 2 : 1) : 0;
+  // Index of the current step; everything before it is done (see Timeline).
+  const step = settled
+    ? 5
+    : resultKnown
+      ? 4
+      : bet.status === MatchStatus.Active
+        ? kicked
+          ? 3
+          : 2
+        : 1;
 
   let result: ReactNode;
   if (resultKnown) result = mt.resultFinal(mt.resultLabel[match.result]);
@@ -107,6 +116,8 @@ function Details({ id, bet, match, isNew, refetch }: { id: bigint; bet: MatchBet
   const myPick = role === "creator" ? bet.creatorPick : bet.takerPick;
   const myStake = role === "creator" ? bet.creatorStake : bet.takerStake;
   const iWon = (role === "creator" && bet.payout === Payout.Creator) || (role === "taker" && bet.payout === Payout.Taker);
+  // Confetti right after creating a bet, after accepting one, and when you open a bet you won.
+  const [burst, setBurst] = useState(() => (isNew || (settled && iWon) ? 1 : 0));
   let position: { tone: "accent" | "good" | "muted" | "bad"; text: ReactNode };
   if (cancelled) position = { tone: "muted", text: mt.position.cancelled };
   else if (role === "visitor") {
@@ -158,7 +169,19 @@ function Details({ id, bet, match, isNew, refetch }: { id: bigint; bet: MatchBet
         kickoff={match.kickoff}
         now={now}
         pot={pot}
-        status={open && kicked ? mt.notTakenChip : mt.status[bet.status]}
+        status={
+          open
+            ? kicked
+              ? mt.notTakenChip
+              : mt.status[bet.status]
+            : bet.status === MatchStatus.Active
+              ? !kicked
+                ? mt.chip.ready
+                : now < match.kickoff + 2 * 3600
+                  ? mt.chip.live
+                  : mt.chip.afterMatch
+              : mt.status[bet.status]
+        }
         score={resultKnown ? mt.resultLabel[match.result] : null}
       />
 
@@ -173,10 +196,12 @@ function Details({ id, bet, match, isNew, refetch }: { id: bigint; bet: MatchBet
         />
       )}
 
-      <Actions id={id} bet={bet} match={match} refetch={refetch} />
+      <Actions id={id} bet={bet} match={match} refetch={refetch} onJoined={() => setBurst(Date.now())} />
+      <Confetti trigger={burst} />
 
       <section className="card p-5">
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="relative grid gap-3 sm:grid-cols-2">
+          <DuelDivider />
           <Slip
             role={mt.creator}
             who={bet.creator}
@@ -213,7 +238,19 @@ function Details({ id, bet, match, isNew, refetch }: { id: bigint; bet: MatchBet
   );
 }
 
-function Actions({ id, bet, match, refetch }: { id: bigint; bet: MatchBet; match: Match; refetch: () => void }) {
+function Actions({
+  id,
+  bet,
+  match,
+  refetch,
+  onJoined,
+}: {
+  id: bigint;
+  bet: MatchBet;
+  match: Match;
+  refetch: () => void;
+  onJoined: () => void;
+}) {
   const { t } = useT();
   const mt = t.matches;
   const { address } = useConnection();
@@ -250,8 +287,8 @@ function Actions({ id, bet, match, refetch }: { id: bigint; bet: MatchBet; match
   const notEnough = kit.balance < bet.takerStake;
   const needsSetup = kit.needsGas || notEnough;
 
-  async function act(run: Parameters<typeof send.run>[0]) {
-    await send.run(run);
+  async function act(run: Parameters<typeof send.run>[0], onSuccess?: () => void) {
+    if ((await send.run(run)) && onSuccess) onSuccess();
     refetch();
     payout.refetch();
     refetchSoon(balance.refetch);
@@ -261,7 +298,7 @@ function Actions({ id, bet, match, refetch }: { id: bigint; bet: MatchBet; match
     act(async (step) => {
       await ensureAllowance(step, address!, contract, bet.takerStake, t.app.create.approving);
       await step(t.bet.joining, (w) => w({ address: contract, abi: matchBetsAbi, functionName: "join", args: [id] }));
-    });
+    }, onJoined);
   const cancel = () =>
     act(async (step) => {
       await step(t.bet.cancelling, (w) => w({ address: contract, abi: matchBetsAbi, functionName: "cancel", args: [id] }));
