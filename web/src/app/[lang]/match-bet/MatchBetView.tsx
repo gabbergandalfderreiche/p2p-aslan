@@ -7,7 +7,7 @@ import { zeroAddress } from "viem";
 import { useConnection, useReadContract } from "wagmi";
 import { TxStatus } from "@/components/AppFrame";
 import { useConnectModal } from "@/components/ConnectModal";
-import { Fact, Person, Share } from "../bet/BetView";
+import { Position, Scoreboard, ShareCard, Slip, Timeline } from "./MatchBetParts";
 import { matchBetsAbi } from "@/generated/contracts";
 import { fmtUsd, TOKEN_SYMBOL, useTokenBalance } from "@/lib/bets";
 import {
@@ -78,91 +78,136 @@ function Details({ id, bet, match, isNew, refetch }: { id: bigint; bet: MatchBet
 
   const pickLabel = (p: number) =>
     p === Pick.Home ? mt.wins(match.home) : p === Pick.Away ? mt.wins(match.away) : p === Pick.Draw ? mt.draw : mt.other;
-  const winsOn = (picks: number[]) => picks.map((p) => mt.resultLabel[p]).join(" / ");
-  const timedOut = now > match.kickoff + RESULT_TIMEOUT && match.result === Result.None;
+  const winsOn = (picks: number[]) => `${mt.winsOn} ${picks.map((p) => mt.resultLabel[p]).join(" / ")}`;
+  const pot = bet.creatorStake + bet.takerStake;
+  const fmt = (v: bigint) => `${fmtUsd(v)} ${TOKEN_SYMBOL}`;
+
+  const me = address?.toLowerCase();
+  const role = me === bet.creator.toLowerCase() ? "creator" : me && me === bet.taker.toLowerCase() ? "taker" : "visitor";
+  const open = bet.status === MatchStatus.Open;
+  const settled = bet.status === MatchStatus.Settled;
+  const cancelled = bet.status === MatchStatus.Cancelled;
+  const kicked = now > 0 && now >= match.kickoff;
+  const resultKnown = match.result !== Result.None;
+  const timedOut = now > match.kickoff + RESULT_TIMEOUT && !resultKnown;
+
+  // 0 created, 1 opponent in, 2 kicked off, 3 result reported/confirmed, 4 paid out
+  const step = settled ? 5 : resultKnown || hasPendingResult(match) ? 3 : bet.status === MatchStatus.Active ? (kicked ? 2 : 1) : 0;
 
   let result: ReactNode;
-  if (match.result !== Result.None) result = mt.resultFinal(mt.resultLabel[match.result]);
+  if (resultKnown) result = mt.resultFinal(mt.resultLabel[match.result]);
   else if (hasPendingResult(match))
     result = mt.resultPending(mt.resultLabel[match.asserted], fmtDate(match.assertedAt + liveness, locale));
   else if (timedOut) result = mt.resultTimeout;
   else result = mt.resultOpen;
 
+  // What this visitor has at stake and what happens next, in one sentence.
+  const myPick = role === "creator" ? bet.creatorPick : bet.takerPick;
+  const myStake = role === "creator" ? bet.creatorStake : bet.takerStake;
+  const iWon = (role === "creator" && bet.payout === Payout.Creator) || (role === "taker" && bet.payout === Payout.Taker);
+  let position: { tone: "accent" | "good" | "muted" | "bad"; text: ReactNode };
+  if (cancelled) position = { tone: "muted", text: mt.position.cancelled };
+  else if (role === "visitor") {
+    position = open && !kicked
+      ? { tone: "accent", text: mt.position.offer(fmt(bet.takerStake), pickLabel(bet.takerPick), fmt(pot)) }
+      : { tone: "muted", text: settled ? mt.payout[bet.payout] : open ? mt.position.notTaken : mt.position.watching };
+  } else {
+    const stakeText = mt.position.mine(fmt(myStake), pickLabel(myPick));
+    const next = settled
+      ? bet.payout === Payout.Refund
+        ? mt.position.refunded
+        : iWon
+          ? mt.position.won(fmt(pot))
+          : mt.position.lost
+      : open
+        ? kicked
+          ? mt.position.expired
+          : mt.position.waitOpponent
+        : resultKnown || hasPendingResult(match)
+          ? mt.position.waitConfirm
+          : kicked
+            ? mt.position.waitResult
+            : mt.position.waitKickoff(fmtDate(match.kickoff, locale));
+    position = {
+      tone: settled ? (iWon ? "good" : bet.payout === Payout.Refund ? "muted" : "bad") : open && kicked ? "bad" : "accent",
+      text: (
+        <>
+          {stakeText} <span className="font-normal text-muted">{next}</span>
+        </>
+      ),
+    };
+  }
+
+  const slipState = (side: "creator" | "taker") =>
+    settled && bet.payout !== Payout.Refund
+      ? (side === "creator") === (bet.payout === Payout.Creator)
+        ? "won"
+        : "lost"
+      : side === "taker" && open
+        ? "open"
+        : "normal";
+
   return (
     <article className="mt-4 space-y-4">
-      <section className="card p-6">
-        <div className="flex items-center justify-between gap-3 text-sm font-semibold text-muted">
-          <span>{mt.number(String(id))}</span>
-          <span className="rounded-full bg-surface-2 px-2 py-0.5 text-[11px] font-bold">{mt.status[bet.status]}</span>
-        </div>
-        <div className="mt-4 text-xs font-bold uppercase tracking-wide text-muted">{match.competition}</div>
-        <h1 className="font-display mt-1 text-2xl font-extrabold leading-snug md:text-3xl">
-          {match.home} – {match.away}
-        </h1>
-        <p className="num text-sm text-muted">
-          {mt.kickoff}: {fmtDate(match.kickoff, locale)}
-        </p>
+      <Scoreboard
+        competition={match.competition}
+        home={match.home}
+        away={match.away}
+        kickoff={match.kickoff}
+        now={now}
+        pot={pot}
+        status={open && kicked ? mt.notTakenChip : mt.status[bet.status]}
+        score={resultKnown ? mt.resultLabel[match.result] : null}
+      />
 
-        <div className="mt-5 grid gap-3 sm:grid-cols-2">
-          <Side
-            title={mt.creator}
-            pick={pickLabel(bet.creatorPick)}
-            winsOn={`${mt.winsOn} ${winsOn([bet.creatorPick])}`}
-            stake={bet.creatorStake}
-            won={bet.payout === Payout.Creator}
-          />
-          <Side
-            title={mt.taker}
-            pick={pickLabel(bet.takerPick)}
-            winsOn={`${mt.winsOn} ${winsOn(takerWinsOn(bet))}`}
-            stake={bet.takerStake}
-            won={bet.payout === Payout.Taker}
-          />
-        </div>
-        <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
-          <Fact label={t.bet.pot} value={`${fmtUsd(bet.creatorStake + bet.takerStake)} ${TOKEN_SYMBOL}`} />
-          <Fact label={t.bet.joinBy} value={fmtDate(match.kickoff, locale)} />
-        </div>
+      <Position tone={position.tone}>{position.text}</Position>
 
-        <dl className="mt-5 space-y-2 text-sm">
-          <Person label={mt.creator} who={bet.creator} me={address} />
-          <Person
-            label={mt.taker}
-            who={bet.status === MatchStatus.Open && bet.taker === zeroAddress ? undefined : bet.taker}
+      {open && !kicked && role === "creator" && (
+        <ShareCard
+          href={`/match-bet?id=${id}`}
+          text={mt.shareText(match.home, match.away)}
+          highlight={isNew}
+          inviteOnly={isInviteOnlyMatchBet(bet)}
+        />
+      )}
+
+      <Actions id={id} bet={bet} match={match} refetch={refetch} />
+
+      <section className="card p-5">
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Slip
+            role={mt.creator}
+            who={bet.creator}
             me={address}
-            fallback={t.bet.nobody}
+            pick={pickLabel(bet.creatorPick)}
+            winsOn={winsOn([bet.creatorPick])}
+            stake={bet.creatorStake}
+            state={slipState("creator")}
           />
-        </dl>
-        {bet.feeBps > 0 && <p className="mt-3 text-xs text-muted">{t.bet.fee((bet.feeBps / 100).toString())}</p>}
-
+          <Slip
+            role={mt.taker}
+            who={open && bet.taker === zeroAddress ? null : bet.taker}
+            me={address}
+            pick={pickLabel(bet.takerPick)}
+            winsOn={winsOn(takerWinsOn(bet))}
+            stake={bet.takerStake}
+            state={slipState("taker")}
+          />
+        </div>
+        <div className="mt-6">
+          <Timeline step={step} cancelled={cancelled} />
+        </div>
         <div className="mt-5 rounded-2xl bg-surface-2 p-4 text-sm">
           <p className="font-semibold">{result}</p>
           <p className="mt-1 text-xs text-muted">{mt.regularTime}</p>
         </div>
-        {bet.status === MatchStatus.Settled && (
-          <p className="mt-3 rounded-2xl bg-good/15 p-4 font-semibold">{mt.payout[bet.payout]}</p>
-        )}
+        <p className="mt-3 text-xs text-muted">
+          {mt.number(String(id))}
+          {bet.feeBps > 0 && ` · ${t.bet.fee((bet.feeBps / 100).toString())}`}
+        </p>
       </section>
 
-      {bet.status === MatchStatus.Open && now < match.kickoff && (
-        <Share href={`/match-bet?id=${id}`} highlight={isNew} inviteOnly={isInviteOnlyMatchBet(bet)} />
-      )}
-
-      <Actions id={id} bet={bet} match={match} refetch={refetch} />
     </article>
-  );
-}
-
-function Side({ title, pick, winsOn, stake, won }: { title: string; pick: string; winsOn: string; stake: bigint; won: boolean }) {
-  return (
-    <div className={`rounded-2xl border p-4 ${won ? "border-good bg-good/10" : "border-line"}`}>
-      <div className="text-xs text-muted">{title}</div>
-      <div className="mt-1 text-lg font-extrabold">{pick}</div>
-      <div className="text-xs text-muted">{winsOn}</div>
-      <div className="num mt-2 font-bold">
-        {fmtUsd(stake)} {TOKEN_SYMBOL}
-      </div>
-    </div>
   );
 }
 

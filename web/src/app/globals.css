@@ -150,6 +150,13 @@ body {
   outline-offset: 1px;
 }
 
+/* Football pitch behind the bet scoreboard; mown stripes in two greens. */
+.pitch {
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(255, 255, 255, 0.14), transparent 60%),
+    repeating-linear-gradient(90deg, #1d6b3e 0 44px, #237a47 44px 88px);
+}
+
 /* Diagonal split behind the hero: one half per side of the bet. */
 .versus {
   background: linear-gradient(115deg, color-mix(in srgb, var(--accent) 16%, transparent) 50%, color-mix(in srgb, var(--accent-2) 12%, transparent) 50%);
