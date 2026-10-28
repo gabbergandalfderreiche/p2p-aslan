@@ -3,7 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import QRCode from "qrcode";
 import { useConnect, useConnection, useConnectors, type Connector } from "wagmi";
-import { Mark } from "./Mark";
+import { Lion } from "./lion/Lion";
 import Link from "next/link";
 import { useT } from "@/i18n/client";
 
@@ -149,7 +149,7 @@ function ConnectDialog({ onClose }: { onClose: () => void }) {
       >
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3">
-            <Mark size={44} />
+            <Lion size={48} />
             <div>
               <h2 id="connect-title" className="font-display text-xl font-extrabold">
                 {c.modalTitle}

@@ -3,6 +3,7 @@ export const de = {
 
   brand: {
     tagline: "Wetten unter Freunden – mit Spielgeld",
+    mascot: "Löwe, das Maskottchen",
     description:
       "Wette gegen deine Freunde statt gegen ein Wettbüro. Ein Smart Contract hält beide Einsätze, ihr entscheidet gemeinsam. Testnetz-Beta, nur Spielgeld.",
   },

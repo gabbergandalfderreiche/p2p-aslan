@@ -5,6 +5,7 @@ export const en: Dictionary = {
 
   brand: {
     tagline: "Bets between friends – with play money",
+    mascot: "Lion mascot",
     description:
       "Bet against your friends instead of a bookmaker. A smart contract holds both stakes, you decide together. Testnet beta, play money only.",
   },

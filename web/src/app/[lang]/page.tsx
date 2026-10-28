@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Mark } from "@/components/Mark";
+import { Lion } from "@/components/lion/Lion";
 import { SiteHeader } from "@/components/SiteHeader";
 import { LegalFooter } from "@/components/LegalFooter";
 import { localePath } from "@/i18n";
@@ -36,7 +36,7 @@ export default async function Home() {
               </div>
             </div>
             <div className="mx-auto">
-              <Mark size={220} />
+              <Lion size={260} animated title={t.brand.mascot} />
             </div>
           </div>
         </section>
