@@ -127,10 +127,12 @@ async function main() {
           nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
           rpcUrls: { default: { http: [env.RPC_URL] } },
         });
-  const client = createPublicClient({ chain, transport: http(env.RPC_URL) });
+  // Public RPCs rate-limit bursts: bundle reads into multicalls and retry short outages.
+  const transport = http(env.RPC_URL, { retryCount: 5, retryDelay: 1_000 });
+  const client = createPublicClient({ chain, transport, batch: { multicall: chain.contracts?.multicall3 ? true : false } });
   const account = env.KEEPER_PRIVATE_KEY ? privateKeyToAccount(env.KEEPER_PRIVATE_KEY) : null;
   if (!account && !DRY_RUN) throw new Error("KEEPER_PRIVATE_KEY missing (or set DRY_RUN=1)");
-  const wallet = account ? createWalletClient({ account, chain, transport: http(env.RPC_URL) }) : null;
+  const wallet = account ? createWalletClient({ account, chain, transport }) : null;
   const mb = { address: d.matchBets, abi: matchBetsAbi };
 
   async function send(label, request) {
