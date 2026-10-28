@@ -97,3 +97,21 @@ export function useLiveness() {
   });
   return Number(q.data ?? 7200n);
 }
+
+// Most-followed competitions first; anything else follows alphabetically.
+const LEAGUE_ORDER = ["UEFA Champions League", "Bundesliga", "Premier League", "Primera Division", "Serie A", "Ligue 1"];
+
+/** Competitions in display order. */
+export function leaguesOf(items: { competition: string }[]) {
+  const names = [...new Set(items.map((m) => m.competition || "–"))];
+  const rank = (n: string) => (LEAGUE_ORDER.includes(n) ? LEAGUE_ORDER.indexOf(n) : LEAGUE_ORDER.length);
+  return names.sort((a, b) => rank(a) - rank(b) || a.localeCompare(b));
+}
+
+/** Items grouped by competition (in display order), each group sorted by kickoff. */
+export function groupByLeague<T extends { competition: string; kickoff: number }>(items: T[]) {
+  return leaguesOf(items).map((league) => ({
+    league,
+    items: items.filter((m) => (m.competition || "–") === league).sort((a, b) => a.kickoff - b.kickoff),
+  }));
+}

@@ -9,7 +9,8 @@ import { TxStatus } from "@/components/AppFrame";
 import { useConnectModal } from "@/components/ConnectModal";
 import { matchBetsAbi } from "@/generated/contracts";
 import { parseUsd, TOKEN_SYMBOL, useTokenBalance } from "@/lib/bets";
-import { MATCH_BETS, Pick, Result, useMatches, type Match, type PickValue } from "@/lib/matches";
+import { groupByLeague, MATCH_BETS, Pick, Result, useMatches, type Match, type PickValue } from "@/lib/matches";
+import { LeagueFilter } from "@/components/LeagueFilter";
 import { fmtDate, useNow } from "@/lib/time";
 import { refetchSoon } from "@/lib/tx";
 import { ensureAllowance, useSend } from "@/lib/useSend";
@@ -28,39 +29,48 @@ export function MatchBetForm() {
   const now = useNow();
   const { matches, isLoading } = useMatches();
   const [selected, setSelected] = useState<bigint | null>(null);
+  const [league, setLeague] = useState<string | null>(null);
 
-  const upcoming = matches
-    .filter((m) => m.result === Result.None && m.kickoff > now + CLOSE_BEFORE_KICKOFF)
-    .sort((a, b) => a.kickoff - b.kickoff);
+  const upcoming = matches.filter((m) => m.result === Result.None && m.kickoff > now + CLOSE_BEFORE_KICKOFF);
   const match = upcoming.find((m) => m.id === selected);
+  const groups = groupByLeague(upcoming);
+  const counts = Object.fromEntries(groups.map((g) => [g.league, g.items.length]));
+  const shown = groups.filter((g) => league === null || g.league === league);
 
   if (!MATCH_BETS) return <p className="mt-4 text-sm text-muted">{mt.noMatchBets}</p>;
   if (match) return <Form match={match} onBack={() => setSelected(null)} />;
 
   return (
     <div className="mt-4">
-      <h3 className="text-sm font-bold">{mt.choose}</h3>
+      <h3 className="mb-2 text-sm font-bold">{mt.choose}</h3>
+      <LeagueFilter leagues={groups.map((g) => g.league)} counts={counts} value={league} onChange={setLeague} />
       {isLoading && <p className="mt-2 text-sm text-muted">{t.app.lists.loading}</p>}
       {!isLoading && upcoming.length === 0 && <p className="mt-2 text-sm text-muted">{mt.empty}</p>}
-      <ul className="mt-2 max-h-[28rem] space-y-2 overflow-y-auto pr-1">
-        {upcoming.map((m) => (
-          <li key={String(m.id)}>
-            <button
-              type="button"
-              onClick={() => setSelected(m.id)}
-              className="w-full rounded-2xl border border-line px-4 py-3 text-left hover:border-accent"
-            >
-              <div className="flex justify-between gap-3 text-xs text-muted">
-                <span>{m.competition}</span>
-                <span className="num">{fmtDate(m.kickoff, locale)}</span>
-              </div>
-              <div className="mt-1 font-bold">
-                {m.home} – {m.away}
-              </div>
-            </button>
-          </li>
+      <div className="mt-2 max-h-[30rem] space-y-4 overflow-y-auto pr-1">
+        {shown.map((g) => (
+          <section key={g.league}>
+            <h4 className="sticky top-0 z-10 bg-surface py-1 text-xs font-extrabold uppercase tracking-wide text-accent-ink">
+              {g.league}
+            </h4>
+            <ul className="mt-1 space-y-2">
+              {g.items.map((m) => (
+                <li key={String(m.id)}>
+                  <button
+                    type="button"
+                    onClick={() => setSelected(m.id)}
+                    className="flex w-full items-center justify-between gap-3 rounded-2xl border border-line px-4 py-2.5 text-left hover:border-accent"
+                  >
+                    <span className="font-bold">
+                      {m.home} – {m.away}
+                    </span>
+                    <span className="num shrink-0 text-xs text-muted">{fmtDate(m.kickoff, locale)}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </section>
         ))}
-      </ul>
+      </div>
     </div>
   );
 }

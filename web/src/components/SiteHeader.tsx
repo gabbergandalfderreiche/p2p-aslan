@@ -13,7 +13,10 @@ export function SiteHeader({ app = false }: { app?: boolean }) {
     <header className="sticky top-0 z-30 border-b border-line bg-bg/85 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3">
         <Logo />
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <Link href={path("/open-bets")} className="text-sm font-semibold whitespace-nowrap text-muted hover:text-ink">
+            {t.nav.openBets}
+          </Link>
           <LanguageSwitcher />
           {app ? (
             <ConnectButton />

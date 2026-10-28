@@ -12,6 +12,7 @@ export const de = {
     how: "So geht's",
     rules: "Regeln",
     openApp: "App öffnen",
+    openBets: "Offene Wetten",
     toApp: "Zur App",
     language: "Sprache",
     themeDark: "Dunkles Design",
@@ -151,6 +152,7 @@ export const de = {
       mine: "Meine Wetten",
       mineEmpty: "Noch keine Wetten. Erstelle oben deine erste!",
       open: "Offene Wetten",
+      allOpen: "Alle ansehen →",
       openEmpty: "Gerade gibt es keine offenen Wetten für alle.",
       loading: "Lädt …",
     },
@@ -158,6 +160,7 @@ export const de = {
 
   matches: {
     tabFootball: "Fussball",
+    allLeagues: "Alle",
     tabCustom: "Eigene Wette",
     title: "Kommende Spiele",
     empty: "Gerade sind keine Spiele gelistet. Der Ergebnis-Bot trägt die nächsten Spiele der Top-Ligen automatisch ein.",
@@ -210,6 +213,21 @@ export const de = {
     confirm: "Ergebnis jetzt bestätigen",
     confirming: "Wird bestätigt …",
     noMatchBets: "Fussball-Wetten sind in diesem Netz noch nicht verfügbar.",
+  },
+
+  open: {
+    title: "Offene Wetten",
+    lead: "Diese Wetten warten auf einen Gegner. Such dir eine aus und halte vor dem Anpfiff dagegen – der Gewinner bekommt den ganzen Topf.",
+    football: "Fussball",
+    custom: "Eigene Wetten",
+    empty: "Gerade wartet keine Fussball-Wette auf einen Gegner. Erstell selbst eine – sie erscheint dann hier.",
+    createOwn: "Eigene Wette erstellen",
+    theyBet: "Ersteller tippt",
+    youBet: "Du hältst dagegen mit",
+    win: (amount: string) => `Topf: ${amount} tUSD`,
+    take: "Ansehen & annehmen",
+    view: "Ansehen",
+    yours: "deine Wette",
   },
 
   bet: {

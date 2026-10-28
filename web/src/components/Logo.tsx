@@ -10,7 +10,7 @@ export function Logo() {
   return (
     <Link href={path()} className="flex items-center gap-2">
       <Lion size={34} />
-      <span className="font-display text-lg font-extrabold">{BRAND.name}</span>
+      <span className="font-display hidden text-lg font-extrabold min-[420px]:inline">{BRAND.name}</span>
     </Link>
   );
 }

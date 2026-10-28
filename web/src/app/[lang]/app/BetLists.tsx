@@ -135,9 +135,13 @@ export function BetLists() {
       )}
       <List
         title={t.app.lists.open}
+        more={{ href: "/open-bets", label: t.app.lists.allOpen }}
         empty={t.app.lists.openEmpty}
         loading={loading}
-        items={all.filter((x) => x.item.open && !x.item.role).map((x) => x.item)}
+        items={all
+          .filter((x) => x.item.open && !x.item.role)
+          .slice(0, 5)
+          .map((x) => x.item)}
       />
     </div>
   );
@@ -150,11 +154,30 @@ const TONES = {
   done: "bg-surface-2 text-muted",
 };
 
-function List({ title, empty, loading, items }: { title: string; empty: string; loading: boolean; items: Item[] }) {
+function List({
+  title,
+  empty,
+  loading,
+  items,
+  more,
+}: {
+  title: string;
+  empty: string;
+  loading: boolean;
+  items: Item[];
+  more?: { href: string; label: string };
+}) {
   const { t, path } = useT();
   return (
     <section>
-      <h2 className="font-display text-xl font-extrabold">{title}</h2>
+      <div className="flex items-end justify-between gap-3">
+        <h2 className="font-display text-xl font-extrabold">{title}</h2>
+        {more && (
+          <Link href={path(more.href)} className="text-sm font-semibold underline">
+            {more.label}
+          </Link>
+        )}
+      </div>
       <div className="mt-3 space-y-3">
         {loading && items.length === 0 && <p className="text-sm text-muted">{t.app.lists.loading}</p>}
         {!loading && items.length === 0 && <p className="text-sm text-muted">{empty}</p>}

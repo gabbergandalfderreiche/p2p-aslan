@@ -116,7 +116,7 @@ export function WalletCard() {
               )}
             </div>
           )}
-          {gas.state === "done" && !noGas && <p className="mt-3 text-sm font-semibold text-good">{w.gasDone}</p>}
+          {gas.state === "done" && !noGas && balance === 0n && <p className="mt-3 text-sm font-semibold text-good">{w.gasDone}</p>}
         </>
       )}
     </aside>

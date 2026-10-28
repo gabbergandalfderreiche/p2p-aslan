@@ -14,6 +14,7 @@ export const en: Dictionary = {
     how: "How it works",
     rules: "Rules",
     openApp: "Open app",
+    openBets: "Open bets",
     toApp: "To the app",
     language: "Language",
     themeDark: "Dark theme",
@@ -153,6 +154,7 @@ export const en: Dictionary = {
       mine: "My bets",
       mineEmpty: "No bets yet. Create your first one above!",
       open: "Open bets",
+      allOpen: "See all →",
       openEmpty: "There are no bets open to everyone right now.",
       loading: "Loading …",
     },
@@ -160,6 +162,7 @@ export const en: Dictionary = {
 
   matches: {
     tabFootball: "Football",
+    allLeagues: "All",
     tabCustom: "Custom bet",
     title: "Upcoming matches",
     empty: "No matches are listed right now. The result bot adds the next top-league matches automatically.",
@@ -211,6 +214,21 @@ export const en: Dictionary = {
     confirm: "Confirm the result now",
     confirming: "Confirming …",
     noMatchBets: "Football bets are not available on this network yet.",
+  },
+
+  open: {
+    title: "Open bets",
+    lead: "These bets are waiting for an opponent. Pick one and bet against it before kickoff – the winner takes the whole pot.",
+    football: "Football",
+    custom: "Custom bets",
+    empty: "No football bet is waiting for an opponent right now. Create one yourself – it will show up here.",
+    createOwn: "Create your own bet",
+    theyBet: "Creator bets",
+    youBet: "You bet against with",
+    win: (amount: string) => `Pot: ${amount} tUSD`,
+    take: "View & accept",
+    view: "View",
+    yours: "your bet",
   },
 
   bet: {
