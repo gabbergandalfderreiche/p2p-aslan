@@ -4,7 +4,8 @@
 //   1. list   – upcoming matches of the chosen competitions (football-data.org) that are not onchain yet
 //   2. report – for listed matches past kickoff + 2h without a result: fetch the final score and
 //               assert it to UMA (with the bond); cancelled/postponed matches are reported as VOID
-//   3. settle – close assertions whose liveness is over, then pay out every bet that can be settled
+//   3. settle – close assertions whose liveness is over, pay out every bet that can be settled and
+//               refund bets nobody took before kickoff (the stake always goes back to the creator)
 //
 // Nothing here can decide a result on its own: every report is an UMA assertion that anyone can
 // dispute during the liveness period, and a wrong one costs the bot its bond.
@@ -42,6 +43,7 @@ const matchBetsAbi = parseAbi([
   "function getBet(uint256 id) view returns ((address creator, uint96 creatorStake, address taker, uint96 takerStake, uint64 matchId, uint8 creatorPick, uint8 takerPick, uint8 status, uint8 payout, uint16 feeBps))",
   "function payoutOf(uint256 id) view returns (uint8)",
   "function settle(uint256 id)",
+  "function cancel(uint256 id)",
 ]);
 
 const bondAbi = parseAbi([
@@ -52,6 +54,7 @@ const bondAbi = parseAbi([
 ]);
 
 const Result = { HOME: 1, DRAW: 2, AWAY: 3, VOID: 4 };
+const OPEN = 1; // MatchBets.Status.Open
 const ACTIVE = 2; // MatchBets.Status.Active
 const LIST_MARGIN = 30 * 60; // do not list matches kicking off within 30 minutes
 const SUSPENDED_GRACE = 24 * 3600; // a suspended match may resume the same day
@@ -241,6 +244,11 @@ async function main() {
   const betCount = await client.readContract({ ...mb, functionName: "betCount" });
   for (let id = 1n; id <= betCount; id++) {
     const bet = await client.readContract({ ...mb, functionName: "getBet", args: [id] });
+    if (bet.status === OPEN) {
+      const kickoff = matches.get(bet.matchId)?.kickoff ?? Infinity;
+      if (now >= kickoff) await send(`refund untaken bet ${id}`, { ...mb, functionName: "cancel", args: [id] });
+      continue;
+    }
     if (bet.status !== ACTIVE) continue;
     const payout = await client.readContract({ ...mb, functionName: "payoutOf", args: [id] });
     if (payout !== 0) await send(`pay out bet ${id}`, { ...mb, functionName: "settle", args: [id] });
