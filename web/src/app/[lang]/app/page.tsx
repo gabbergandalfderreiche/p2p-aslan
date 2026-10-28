@@ -1,0 +1,27 @@
+import type { Metadata } from "next";
+import { AppFrame } from "@/components/AppFrame";
+import { BRAND } from "@/lib/brand";
+import { getDictionary } from "@/i18n/server";
+import { WalletCard } from "./WalletCard";
+import { CreateBet } from "./CreateBet";
+import { BetLists } from "./BetLists";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getDictionary();
+  return {
+    title: `${t.nav.openApp} – ${BRAND.name}`,
+    alternates: { languages: { de: "/de/app", en: "/en/app" } },
+  };
+}
+
+export default function AppPage() {
+  return (
+    <AppFrame>
+      <div className="grid gap-6 lg:grid-cols-[1fr_22rem]">
+        <CreateBet />
+        <WalletCard />
+      </div>
+      <BetLists />
+    </AppFrame>
+  );
+}

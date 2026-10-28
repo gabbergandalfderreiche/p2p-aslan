@@ -1,0 +1,188 @@
+@import "tailwindcss";
+
+/* Placeholder palette until the brand arrives: warm sand, amber and a deep red as generic colours. */
+:root {
+  --bg: #fbf6ef;
+  --surface: #ffffff;
+  --surface-2: #f6ecdf;
+  --ink: #231a14;
+  --muted: #74655a;
+  --line: #eadccb;
+  --accent: #f2a516;
+  --accent-ink: #9a5b00;
+  --accent-2: #c8372d;
+  --on-accent: #241406;
+  --soft: #f7c9a8;
+  --good: #1f9d5a;
+  --bad: #c8372d;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #15110e;
+    --surface: #1f1914;
+    --surface-2: #2a211a;
+    --ink: #f8ede2;
+    --muted: #b3a294;
+    --line: #3a2e25;
+    --accent: #f5b53a;
+    --accent-ink: #ffc76a;
+    --accent-2: #e0564a;
+    --on-accent: #241406;
+    --soft: #8a4b2d;
+    --good: #4ad08a;
+    --bad: #ff7a6e;
+  }
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #15110e;
+  --surface: #1f1914;
+  --surface-2: #2a211a;
+  --ink: #f8ede2;
+  --muted: #b3a294;
+  --line: #3a2e25;
+  --accent: #f5b53a;
+  --accent-ink: #ffc76a;
+  --accent-2: #e0564a;
+  --on-accent: #241406;
+  --soft: #8a4b2d;
+  --good: #4ad08a;
+  --bad: #ff7a6e;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-2: var(--accent-2);
+  --color-on-accent: var(--on-accent);
+  --color-soft: var(--soft);
+  --color-good: var(--good);
+  --color-bad: var(--bad);
+  --font-sans: var(--font-body);
+  --font-display: var(--font-display);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+section[id] {
+  scroll-margin-top: 72px;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body), system-ui, sans-serif;
+}
+
+.card {
+  background: var(--surface);
+  border: 1.5px solid var(--line);
+  border-radius: 22px;
+  box-shadow: 0 2px 0 var(--line);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 999px;
+  padding: 0.75rem 1.3rem;
+  font-weight: 700;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+.btn:active:not(:disabled) {
+  transform: translateY(2px);
+}
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.btn-primary {
+  background: var(--accent);
+  color: var(--on-accent);
+  box-shadow: 0 4px 0 #b57400;
+}
+.btn-primary:active {
+  box-shadow: 0 2px 0 #b57400;
+}
+.btn-ghost {
+  background: var(--surface);
+  color: var(--ink);
+  border: 1.5px solid var(--line);
+  box-shadow: 0 3px 0 var(--line);
+}
+.btn-good {
+  background: var(--good);
+  color: #fff;
+  box-shadow: 0 4px 0 #157244;
+}
+.btn-bad {
+  background: var(--accent-2);
+  color: #fff;
+  box-shadow: 0 4px 0 #8f2119;
+}
+
+.field {
+  width: 100%;
+  border-radius: 14px;
+  border: 1.5px solid var(--line);
+  background: var(--bg);
+  padding: 0.65rem 0.85rem;
+  color: var(--ink);
+}
+.field:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+/* Diagonal split behind the hero: one half per side of the bet. */
+.versus {
+  background: linear-gradient(115deg, color-mix(in srgb, var(--accent) 16%, transparent) 50%, color-mix(in srgb, var(--accent-2) 12%, transparent) 50%);
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Long-form text on Impressum / Datenschutz. */
+.legal {
+  line-height: 1.7;
+}
+.legal h2 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.25rem;
+  margin-top: 2rem;
+  margin-bottom: 0.5rem;
+}
+.legal p,
+.legal ul {
+  color: var(--muted);
+  margin-bottom: 0.75rem;
+}
+.legal ul {
+  list-style: disc;
+  padding-left: 1.25rem;
+}
+.legal li {
+  margin-bottom: 0.4rem;
+}
+.legal b,
+.legal code {
+  color: var(--ink);
+}
