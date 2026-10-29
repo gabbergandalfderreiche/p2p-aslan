@@ -65,6 +65,17 @@ const SHEETS = {
   fall: { src: "/den-lion-crash.png", frames: 3, w: 271, h: 220 },
 } as const;
 type Sheet = keyof typeof SHEETS;
+// Gallop speed: one frame lasts STRIDE_MS at liftoff, shortening with log2 of the multiplier down to
+// STRIDE_MIN_MS. Integrated over the flight time so the cycle stays smooth while it speeds up.
+const STRIDE_MS = 80;
+const STRIDE_MIN_MS = 42;
+const STRIDE_SLOPE = (14 * GROWTH) / Math.LN2; // ms shorter per ms of flight
+const STRIDE_FAST_AT = (STRIDE_MS - STRIDE_MIN_MS) / STRIDE_SLOPE;
+function stridePhase(flightMs: number) {
+  const t = Math.max(0, flightMs);
+  if (t < STRIDE_FAST_AT) return Math.log(STRIDE_MS / (STRIDE_MS - STRIDE_SLOPE * t)) / STRIDE_SLOPE;
+  return Math.log(STRIDE_MS / STRIDE_MIN_MS) / STRIDE_SLOPE + (t - STRIDE_FAST_AT) / STRIDE_MIN_MS;
+}
 const ANCHOR_X = 80;
 const ANCHOR_Y = 95;
 const RAGE_AT = 1000; // from 10.00x the lion catches fire
@@ -134,11 +145,9 @@ export function LiveGraph({
   const baseWidth = Math.max(130, Math.min(280, size.w * 0.28));
   const lionWidth = baseWidth * (flying || crashed ? growth : 0.55);
   const rage = live.multiplier >= RAGE_AT && (flying || crashed);
-  // Gallop gets faster as it climbs; the frame comes from the shared clock, so it never drifts.
-  const frameMs = Math.max(40, 95 - 14 * Math.log2(m));
   const sheet: Sheet = crashed && rage ? "fall" : rage ? "rage" : "run";
   // The fall frames play once by CSS from the moment the crash shows up; the runner freezes mid-stride.
-  const frame = flying ? Math.floor(now / frameMs) % SHEETS[sheet].frames : crashed && rage ? 0 : 3;
+  const frame = flying ? Math.floor(stridePhase(live.flightMs)) % SHEETS[sheet].frames : crashed && rage ? 0 : 3;
   const tipLeft = (tip[0] / VW) * 100;
   const tipTop = (tip[1] / VH) * 100;
 
@@ -158,7 +167,7 @@ export function LiveGraph({
   return (
     <div
       ref={box}
-      className={`den-field relative h-[17rem] overflow-hidden rounded-[22px] text-white sm:h-[30rem] ${crashed ? "den-shake" : ""} ${rage && flying ? "den-rage" : ""}`}
+      className={`den-field relative h-[17rem] select-none overflow-hidden rounded-[22px] text-white sm:h-[30rem] ${crashed ? "den-shake" : ""} ${rage && flying ? "den-rage" : ""}`}
     >
       <svg className="absolute inset-0 h-full w-full" viewBox={`0 0 ${VW} ${VH}`} preserveAspectRatio="none" aria-hidden>
         <defs>
@@ -228,9 +237,7 @@ export function LiveGraph({
         </div>
       )}
       {crashed && (
-        <span className="den-pop pointer-events-none absolute text-6xl" style={{ left: `${tipLeft}%`, top: `${tipTop}%`, transform: "translate(-50%, -50%)" }} aria-hidden>
-          💥
-        </span>
+        <span key={`burst-${game?.round}`} className="den-burst pointer-events-none absolute" style={{ left: `${tipLeft}%`, top: `${tipTop}%` }} aria-hidden />
       )}
       {live.phase === "betting" && (
         <div className="pointer-events-none absolute bottom-[3%] left-[3%]" aria-hidden>
@@ -266,7 +273,7 @@ export function LiveGraph({
         {crashed && (
           <div>
             <div className="den-pop font-display text-3xl font-extrabold uppercase tracking-wide sm:text-4xl" style={{ color: RED }}>
-              💥 {g.roaredTitle}
+              {g.roaredTitle}
             </div>
             <div className="den-pop num font-display text-7xl font-extrabold drop-shadow-lg sm:text-9xl" style={{ color: RED }}>
               @ {fmt(live.multiplier)}x

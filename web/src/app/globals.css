@@ -354,6 +354,29 @@ body {
   0% { opacity: 1; }
   100% { opacity: 0.35; }
 }
+/* Crash burst at the curve tip: hot core plus rays, gone in half a second. */
+.den-burst {
+  width: 10rem;
+  height: 10rem;
+  margin: -5rem 0 0 -5rem;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, #fff6c2 0%, #ffc23a 18%, rgba(255, 90, 30, 0.9) 34%, rgba(255, 60, 20, 0) 62%),
+    repeating-conic-gradient(rgba(255, 190, 60, 0.85) 0deg 7deg, transparent 7deg 30deg);
+  -webkit-mask: radial-gradient(circle, #000 35%, transparent 70%);
+  mask: radial-gradient(circle, #000 35%, transparent 70%);
+  opacity: 0;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .den-burst {
+    animation: den-burst 0.6s ease-out forwards;
+  }
+}
+@keyframes den-burst {
+  0% { transform: scale(0.2) rotate(0); opacity: 1; }
+  60% { opacity: 1; }
+  100% { transform: scale(1.5) rotate(25deg); opacity: 0; }
+}
 @keyframes den-pop {
   0% { transform: scale(0.6); opacity: 0; }
   100% { transform: scale(1); opacity: 1; }
