@@ -26,10 +26,14 @@ apply in the EU, so the deploy script refuses to run on mainnet.
 
 ## Easter egg: Löwensprung (`CrashGame`)
 
-Double-click the lion. A play-money crash game against the house: pick an auto cash-out, the crash
-point comes from the hash of the block after the stake (about 1 % bust at 1.00x, otherwise
-P(crash ≥ x) ≈ 0.99 / x). Winnings are minted as tUSD; `/api/crash/reveal` resolves rounds so
-players sign once. Testnet only – with real money this would be a licensed casino game.
+Double-click the lion. A play-money crash game against the house with non-stop rounds: stake during
+the 6 s betting window, jump off by click (or auto) before the crash. Players sign in by signing a
+message, deposit tUSD once to the house wallet, play on a game account (no transactions) and
+withdraw at the end. The server (`web/src/lib/den`, Upstash Redis) runs the rounds from the clock;
+each round shows sha256(seed) up front and the seed after the crash, so the crash point
+(about 1 % bust at 1.00x, otherwise P(crash ≥ x) ≈ 0.99 / x) can be checked. The on-chain
+`CrashGame` is an earlier single-player version and only kept as tUSD minter.
+Testnet only – with real money this would be a licensed casino game with custodial balances.
 
 ## Custom bets (`BetEscrow`)
 
