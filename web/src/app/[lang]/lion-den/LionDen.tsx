@@ -216,100 +216,91 @@ export function LionDen() {
   }
 
   return (
-    <div className="space-y-6">
-      <header>
-        <span className="rounded-full bg-accent-2 px-2.5 py-1 text-xs font-extrabold uppercase tracking-wide text-white">{g.secret}</span>
-        <h1 className="font-display mt-2 text-4xl font-extrabold">{g.title}</h1>
-        <p className="mt-1 max-w-2xl text-muted">{g.lead}</p>
+    <div className="den-dark space-y-6 rounded-[28px] p-3 sm:p-6">
+      <header className="flex flex-wrap items-center gap-3">
+        <Crown />
+        <h1 className="font-display text-4xl font-extrabold sm:text-5xl">{g.title}</h1>
+        <span className="rounded-full bg-accent-2 px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wide text-white">{g.secret}</span>
+        <p className="w-full max-w-2xl text-sm text-muted">{g.lead}</p>
       </header>
 
-      <section className="card p-3 sm:p-4">
+      <section className="den-panel p-3 sm:p-5">
         <LiveGraph
-          live={live}
-          round={roundId}
+          game={den.game}
+          offset={den.offset}
           cashedAt={cashedAt}
           lostStake={lostStake?.round === roundId ? lostStake.text : null}
           lastCrash={den.game?.history[0]?.crash ?? null}
         />
-        <div className="mt-3 flex gap-1.5 overflow-x-auto pb-1">
+        <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
           {(den.game?.history ?? []).map((h) => (
             <span
               key={h.round}
-              className={`num shrink-0 rounded-md px-2 py-1 text-xs font-bold ${h.crash >= 200 ? "bg-good/20 text-good" : "bg-accent-2/15 text-accent-2"}`}
+              className={`num shrink-0 rounded-full bg-white/5 px-3 py-1.5 text-xs font-extrabold ${h.crash >= 200 ? "text-[#3ddc84]" : "text-[#ff5a4e]"}`}
             >
               {x(h.crash)}x
             </span>
           ))}
         </div>
-      </section>
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_22rem]">
-        <section className="card p-5">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Field label={g.stake} hint={g.stakeHint}>
-              <div className="flex items-center gap-2">
+        <div className="mt-4 grid gap-5 border-t border-white/10 pt-5 sm:grid-cols-2 sm:gap-0 sm:divide-x sm:divide-white/10">
+          <div className="sm:pr-6">
+            <div className="mb-2 text-sm font-bold">{g.stake}</div>
+            <div className="flex flex-wrap items-center gap-2">
+              {STAKES.map((v) => (
+                <Chip key={v} active={Number(stake) === v} onClick={() => setStake(String(v))}>
+                  {v}
+                </Chip>
+              ))}
+              <div className="flex items-center rounded-xl border border-white/15 bg-black/30 pr-3">
                 <input
-                  className="field num text-lg font-bold"
+                  className="num w-20 bg-transparent px-3 py-2 text-lg font-bold outline-none"
                   inputMode="decimal"
                   value={stake}
                   onChange={(e) => setStake(e.target.value)}
                   aria-label={g.stake}
                 />
-                <span className="text-sm font-bold text-muted">{TOKEN_SYMBOL}</span>
+                <span className="text-xs font-bold text-muted">{TOKEN_SYMBOL}</span>
               </div>
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                <Chip onClick={() => setStake(String(Math.max(0.1, Number(stake.replace(",", ".")) / 2 || 0)))}>½</Chip>
-                <Chip onClick={() => setStake(String(Math.min(100, (Number(stake.replace(",", ".")) || 0) * 2)))}>×2</Chip>
-                {STAKES.map((v) => (
-                  <Chip key={v} active={Number(stake) === v} onClick={() => setStake(String(v))}>
-                    {v}
-                  </Chip>
-                ))}
-              </div>
-            </Field>
-            <Field
-              label={g.auto}
-              hint={autoOn ? g.autoHintOn : g.autoHintOff}
-              toggle={
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={autoOn}
-                  onClick={() => setAutoOn((v) => !v)}
-                  className={`relative h-6 w-11 rounded-full transition-colors ${autoOn ? "bg-good" : "bg-line"}`}
+            </div>
+            <p className="mt-2 text-xs text-muted">{g.stakeHint}</p>
+          </div>
+          <div className="sm:pl-6">
+            <div className="mb-2 text-sm font-bold">{g.auto}</div>
+            <div className="flex flex-wrap items-center gap-2">
+              <Chip active={!autoOn} onClick={() => setAutoOn(false)}>
+                {g.autoOff.toUpperCase()}
+              </Chip>
+              {AUTOS.map((v) => (
+                <Chip
+                  key={v}
+                  active={autoOn && Number(autoText) === Number(v)}
+                  onClick={() => {
+                    setAutoOn(true);
+                    setAutoText(Number(v).toFixed(2));
+                  }}
                 >
-                  <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${autoOn ? "left-[1.375rem]" : "left-0.5"}`} />
-                  <span className="sr-only">{g.auto}</span>
-                </button>
-              }
-            >
-              <div className={`flex items-center gap-2 ${autoOn ? "" : "opacity-50"}`}>
+                  {v}x
+                </Chip>
+              ))}
+              <div className={`flex items-center rounded-xl border bg-black/30 pr-3 ${autoOn ? "border-accent" : "border-white/15"}`}>
                 <input
-                  className="field num text-lg font-bold"
+                  className="num w-20 bg-transparent px-3 py-2 text-lg font-bold outline-none"
                   inputMode="decimal"
                   value={autoText}
-                  disabled={!autoOn}
-                  onChange={(e) => setAutoText(e.target.value)}
+                  onFocus={() => setAutoOn(true)}
+                  onChange={(e) => {
+                    setAutoOn(true);
+                    setAutoText(e.target.value);
+                  }}
                   aria-label={g.auto}
                 />
-                <span className="text-sm font-bold text-muted">x</span>
+                <span className="text-xs font-bold text-muted">x</span>
               </div>
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                {AUTOS.map((v) => (
-                  <Chip
-                    key={v}
-                    active={autoOn && Number(autoText) === Number(v)}
-                    onClick={() => {
-                      setAutoOn(true);
-                      setAutoText(Number(v).toFixed(2));
-                    }}
-                  >
-                    {v}x
-                  </Chip>
-                ))}
-              </div>
-            </Field>
+            </div>
+            <p className="mt-2 text-xs text-muted">{autoOn ? g.autoHintOn : g.autoHintOff}</p>
           </div>
+        </div>
 
           {!stakeOk && <p className="mt-3 text-sm font-semibold text-bad">{g.badStake}</p>}
           {!autoOk && <p className="mt-3 text-sm font-semibold text-bad">{g.badTarget}</p>}
@@ -320,7 +311,7 @@ export function LionDen() {
             </p>
           )}
 
-          <div className="mt-4">{action}</div>
+          <div className="den-action mt-5">{action}</div>
           {message && (
             <p className={`mt-3 text-sm font-semibold ${message.ok ? "text-good" : "text-bad"}`}>
               {message.text}{" "}
@@ -331,9 +322,10 @@ export function LionDen() {
               )}
             </p>
           )}
-        </section>
+      </section>
 
-        <aside className="card h-fit space-y-4 p-5">
+      <div>
+        <aside className="den-panel grid gap-4 p-5 md:grid-cols-3">
           <div>
             <h2 className="font-display text-xl font-extrabold">{g.account}</h2>
             <div className="num font-display mt-1 text-3xl font-extrabold">
@@ -379,7 +371,7 @@ export function LionDen() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <section className="card p-5">
+        <section className="den-panel p-5">
           <h2 className="font-display text-xl font-extrabold">{g.players(den.game?.bets.length ?? 0)}</h2>
           <ul className="mt-3 divide-y divide-line text-sm">
             {(den.game?.bets ?? []).length === 0 && <li className="py-2 text-muted">{g.noPlayers}</li>}
@@ -405,7 +397,7 @@ export function LionDen() {
           </ul>
         </section>
 
-        <section className="card p-5">
+        <section className="den-panel p-5">
           <h2 className="font-display text-xl font-extrabold">{g.dashboard}</h2>
           <div className={`num mt-3 rounded-2xl p-3 text-center ${net >= 0 ? "bg-good/15 text-good" : "bg-accent-2/15 text-accent-2"}`}>
             <div className="text-[11px] font-bold uppercase tracking-wide">{g.net}</div>
@@ -438,38 +430,28 @@ export function LionDen() {
   );
 }
 
-function Field({
-  label,
-  hint,
-  toggle,
-  children,
-}: {
-  label: string;
-  hint: string;
-  toggle?: ReactNode;
-  children: ReactNode;
-}) {
-  return (
-    <div className="rounded-2xl border-2 border-line bg-surface-2/50 p-4">
-      <div className="mb-2 flex items-center justify-between gap-2">
-        <span className="text-xs font-extrabold uppercase tracking-wide text-muted">{label}</span>
-        {toggle}
-      </div>
-      {children}
-      <p className="mt-2 text-xs text-muted">{hint}</p>
-    </div>
-  );
-}
-
 function Chip({ active = false, onClick, children }: { active?: boolean; onClick: () => void; children: ReactNode }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`num min-w-10 rounded-lg border px-2.5 py-1 text-sm font-bold ${active ? "border-accent bg-accent text-on-accent" : "border-line bg-surface hover:border-accent"}`}
+      className={`num min-w-12 rounded-full border px-4 py-2 text-sm font-extrabold transition-colors ${active ? "border-accent bg-accent text-on-accent shadow-[0_0_18px_rgba(245,181,58,0.45)]" : "border-white/15 bg-black/20 hover:border-accent"}`}
     >
       {children}
     </button>
+  );
+}
+
+/** Golden crown next to the title. */
+function Crown() {
+  return (
+    <svg width="44" height="34" viewBox="0 0 44 34" aria-hidden>
+      <path d="M3 10 L12 20 L22 4 L32 20 L41 10 L37 30 L7 30 Z" fill="#f5b53a" />
+      <rect x="7" y="27" width="30" height="5" rx="2" fill="#d48c15" />
+      <circle cx="3" cy="9" r="3" fill="#f5b53a" />
+      <circle cx="22" cy="4" r="3" fill="#f5b53a" />
+      <circle cx="41" cy="9" r="3" fill="#f5b53a" />
+    </svg>
   );
 }
 
