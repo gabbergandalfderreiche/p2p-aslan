@@ -120,3 +120,20 @@ export function groupByLeague<T extends { competition: string; kickoff: number }
     items: items.filter((m) => (m.competition || "–") === league).sort((a, b) => a.kickoff - b.kickoff),
   }));
 }
+
+// Quotes are decimal odds in hundredths, like the contract: 200 = 2.00 = equal stakes.
+export const QUOTE_PRESETS = [150, 200, 250, 300] as const;
+export const MIN_QUOTE = 101;
+export const MAX_QUOTE = 1000;
+
+/** Opponent's stake for a creator stake at `quote` (same rounding as MatchBets.create). */
+export const takerStakeFor = (stake: bigint, quote: number) => (stake * BigInt(quote - 100)) / 100n;
+
+/** Effective quote of one side: what it gets back (the pot) per unit staked, in hundredths. */
+export const quoteOf = (own: bigint, pot: bigint) => (own > 0n ? Number((pot * 100n) / own) : 0);
+
+/** "2,5" / "2.50" -> 250; NaN if not a number. */
+export const parseQuote = (input: string) => Math.round(Number(input.replace(",", ".")) * 100);
+
+export const fmtQuote = (hundredths: number, locale: string) =>
+  (hundredths / 100).toLocaleString(locale === "de" ? "de-CH" : "en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 });

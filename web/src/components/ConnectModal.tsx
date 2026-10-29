@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import QRCode from "qrcode";
 import { useConnect, useConnection, useConnectors, type Connector } from "wagmi";
 import { Lion } from "./lion/Lion";
+import { PhantomHelpLink } from "./PhantomHelp";
 import Link from "next/link";
 import { useT } from "@/i18n/client";
 
@@ -249,7 +250,10 @@ function ConnectDialog({ onClose }: { onClose: () => void }) {
           </div>
         )}
 
-        <Link href={path("/start")} onClick={onClose} className="mt-4 block text-center text-xs font-semibold underline">
+        <div className="mt-4 text-center">
+          <PhantomHelpLink />
+        </div>
+        <Link href={path("/start")} onClick={onClose} className="mt-2 block text-center text-xs font-semibold underline">
           {t.guide.link}
         </Link>
 

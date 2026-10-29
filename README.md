@@ -20,9 +20,9 @@ apply in the EU, so the deploy script refuses to run on mainnet.
 ## Football bets (`MatchBets`)
 
 - The curator (the result bot) lists matches from football-data.org. It cannot decide them.
-- Creator picks home / draw / away, the taker another outcome or "anything else"; each side sets its stake. Joining closes at kickoff.
+- Creator picks 1 / X / 2, a stake and a decimal quote (1.01–10.00); the taker picks one of the two other outcomes and stakes `stake × (quote − 1)`. Winner takes both stakes; the third outcome refunds both. Joining closes at kickoff.
 - After kickoff + 2 h the bot asserts the result after regular time to UMA with a bond. Undisputed for 2 h → it stands; disputes go to UMA's vote, a rejected assertion can be redone.
-- Then anyone (normally the bot) settles: winner takes the pot. Neither pick happened, match void, or no confirmed result within 14 days → refunds.
+- Then anyone (normally the bot) settles: winner takes the pot. Third outcome, match void, or no confirmed result within 14 days → refunds.
 
 ## Custom bets (`BetEscrow`)
 

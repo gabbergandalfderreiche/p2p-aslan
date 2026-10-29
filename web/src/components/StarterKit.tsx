@@ -2,6 +2,7 @@
 
 import type { useStarterKit } from "@/lib/useStarterKit";
 import { ETH_FAUCET } from "@/lib/network";
+import { PhantomHelpLink } from "./PhantomHelp";
 import { fmtDate } from "@/lib/time";
 import { useT } from "@/i18n/client";
 
@@ -28,6 +29,7 @@ export function StarterKit({ kit, need }: { kit: ReturnType<typeof useStarterKit
       <button className="btn btn-primary mt-3 w-full" disabled={Boolean(kit.busy)} onClick={kit.start}>
         {kit.busy ?? w.kitButton}
       </button>
+      <PhantomHelpLink className="mt-2 text-muted" />
       {kit.error && (
         <p className="mt-2 text-xs text-muted">
           {kit.error}

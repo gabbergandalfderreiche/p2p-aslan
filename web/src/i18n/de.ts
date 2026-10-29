@@ -28,8 +28,8 @@ export const de = {
     ctaGuide: "Neu bei Krypto? Hier starten",
     stepsTitle: "So geht's",
     steps: [
-      { title: "Spiel wählen und tippen", text: "Du nimmst einen der drei Ausgänge – 1, X oder 2 – und legst den Einsatz fest." },
-      { title: "Link schicken", text: "Dein Freund wählt vor dem Anpfiff einen der beiden anderen Ausgänge und setzt gleich viel. Jetzt liegen beide Einsätze im Contract." },
+      { title: "Spiel wählen und tippen", text: "Du nimmst einen der drei Ausgänge – 1, X oder 2 – und legst Einsatz und Quote fest." },
+      { title: "Link schicken", text: "Dein Freund wählt vor dem Anpfiff einen der beiden anderen Ausgänge und setzt den Gegen-Einsatz laut Quote. Jetzt liegen beide Einsätze im Contract." },
       { title: "Automatisch auszahlen", text: "Nach dem Abpfiff wird das Ergebnis über UMA bestätigt. Der Gewinner bekommt den ganzen Topf, ohne dass jemand etwas melden muss." },
     ],
     rulesTitle: "Wer entscheidet, wer gewonnen hat?",
@@ -45,7 +45,7 @@ export const de = {
     why: "Wetten mit echtem Geld für die Öffentlichkeit brauchen in der Schweiz eine Bewilligung nach dem Geldspielgesetz, in Deutschland und der EU gelten ähnliche Regeln. Das gilt auch dann, wenn die Wette über eine Blockchain läuft. Deshalb läuft diese Beta nur im Base-Sepolia-Testnetz mit tUSD – einem Test-Dollar ohne Wert, den sich jeder gratis holen kann.",
     factsTitle: "Was der Contract kann – und was nicht",
     facts: [
-      "Er hält die Einsätze, bis die Wette entschieden ist. Es gibt kein Wettbüro und keine Quoten – nur zwei Menschen, die gegeneinander wetten.",
+      "Er hält die Einsätze, bis die Wette entschieden ist. Es gibt kein Wettbüro: Die Quote legt ihr selbst fest, und niemand verdient an einer Marge.",
       "Der Betreiber kann keine Einsätze bewegen, keine laufende Wette ändern und kein Ergebnis selbst festlegen.",
       "Der Ergebnis-Bot kann Spiele eintragen und Ergebnisse melden – jede Meldung lässt sich bei UMA anfechten.",
       "Gebühr: 0 %. Eine spätere Änderung ginge nur über eine 2-tägige Zeitsperre und gilt nie für laufende Wetten.",
@@ -177,10 +177,17 @@ export const de = {
     wins: (team: string) => `${team} gewinnt`,
     draw: "Unentschieden",
     opponentChooses: (a: string, b: string) =>
-      `Dein Gegner wählt beim Annehmen einen der beiden anderen Ausgänge – „${a}“ oder „${b}“ – und setzt gleich viel. Tritt der dritte ein, bekommt ihr beide euer Geld zurück.`,
-    sameStake: "Dein Gegner setzt genau gleich viel.",
+      `Dein Gegner wählt beim Annehmen einen der beiden anderen Ausgänge – „${a}“ oder „${b}“ – und setzt den Gegen-Einsatz, der sich aus deiner Quote ergibt. Tritt der dritte ein, bekommt ihr beide euer Geld zurück.`,
+    quote: "Quote für deinen Tipp",
+    quoteShort: "Quote",
+    quoteHint: "Wie beim Wettbüro: Gewinn = Einsatz × Quote. Favorit = tiefe Quote (z. B. 1.50), Underdog = hohe Quote (z. B. 3.00). 2.00 = beide setzen gleich viel.",
+    youStake: "Du setzt",
+    theyStake: "Gegner setzt",
+    winnerGets: "Gewinner bekommt",
+    badQuote: "Die Quote muss zwischen 1.01 und 10.00 liegen.",
+    stakeTooSmall: "Bei dieser Quote ist der Gegen-Einsatz zu klein – setz etwas mehr.",
     takerChooses: (a: string, b: string) => `wählt „${a}“ oder „${b}“`,
-    sameStakeShort: "gleicher Einsatz",
+    sameStakeShort: "Einsatz laut Quote",
     thirdRefund: (label: string) => `Kommt „${label}“, bekommen beide ihr Geld zurück.`,
     yourChoice: (amount: string) => `Worauf wettest du? (${amount} tUSD)`,
     yourStake: "Dein Einsatz",
@@ -290,6 +297,22 @@ export const de = {
     more: "Mehr über UMA ↗",
   },
 
+  phantomHelp: {
+    link: "Phantom im Testnetz einrichten – so geht's",
+    title: "Phantom ins Testnetz bringen",
+    sub: "Einmalig, dauert 30 Sekunden",
+    why: "Diese App läuft im Testnetz Base Sepolia mit Spielgeld. Phantom zeigt Testnetze erst an, wenn der Testnetz-Modus an ist – sonst siehst du kein Guthaben und Transaktionen schlagen fehl.",
+    steps: [
+      { title: "Phantom öffnen", text: "Browser-Erweiterung anklicken oder die Phantom-App auf dem Handy öffnen." },
+      { title: "Einstellungen öffnen", text: "Oben links auf dein Konto-Symbol tippen, dann auf das Zahnrad ⚙ „Einstellungen“." },
+      { title: "Entwicklereinstellungen", text: "Ganz unten „Entwicklereinstellungen“ (Developer Settings) öffnen." },
+      { title: "Testnet-Modus einschalten", text: "Den Schalter „Testnet-Modus“ auf an stellen. Bei Base wird dann automatisch „Base Sepolia“ verwendet." },
+      { title: "Zurück und neu laden", text: "Diese Seite neu laden und mit „Startguthaben holen“ loslegen." },
+    ],
+    safe: "Der Testnet-Modus ändert nichts an deinem echten Guthaben. Du kannst ihn danach jederzeit wieder ausschalten.",
+    done: "Verstanden",
+  },
+
   bet: {
     metaTitle: "Wette",
     back: "← Zur Übersicht",
@@ -367,7 +390,7 @@ export const de = {
     steps: [
       {
         title: "Wallet anlegen",
-        text: "Am einfachsten: In der App auf „Anmelden“ und „Mit Passkey anmelden“ tippen. Das geht mit Face ID oder Fingerabdruck, ohne App und ohne Merksätze. Alternativ die kostenlose Wallet Phantom (phantom.com).",
+        text: "Am einfachsten: In der App auf „Anmelden“ und „Mit Passkey anmelden“ tippen. Das geht mit Face ID oder Fingerabdruck, ohne App und ohne Merksätze. Alternativ die kostenlose Wallet Phantom (phantom.com) – dort einmal den Testnet-Modus einschalten (Einstellungen → Entwicklereinstellungen).",
       },
       {
         title: "Test-ETH für Gebühren erhalten",

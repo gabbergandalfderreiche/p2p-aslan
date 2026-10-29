@@ -213,6 +213,7 @@ export function Slip({
   pick,
   winsOn,
   stake,
+  quote,
   state,
 }: {
   role: string;
@@ -221,6 +222,7 @@ export function Slip({
   pick: string;
   winsOn: string;
   stake: bigint;
+  quote: string;
   state: "won" | "lost" | "open" | "normal";
 }) {
   const { t } = useT();
@@ -257,8 +259,13 @@ export function Slip({
       </div>
       <div className="mt-2 font-display text-xl font-extrabold leading-tight">{pick}</div>
       <div className="text-xs text-muted">{winsOn}</div>
-      <div className="num mt-3 font-display text-3xl font-extrabold">
-        {fmtUsd(stake)} <span className="text-base font-bold text-muted">{TOKEN_SYMBOL}</span>
+      <div className="mt-3 flex items-end justify-between gap-2">
+        <div className="num font-display text-3xl font-extrabold">
+          {fmtUsd(stake)} <span className="text-base font-bold text-muted">{TOKEN_SYMBOL}</span>
+        </div>
+        <span className="num rounded-full bg-surface-2 px-2.5 py-1 text-xs font-bold">
+          {t.matches.quoteShort} {quote}
+        </span>
       </div>
     </div>
   );

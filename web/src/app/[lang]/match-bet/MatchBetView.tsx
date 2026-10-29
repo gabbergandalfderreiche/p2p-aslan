@@ -19,7 +19,9 @@ import {
   Pick,
   RESULT_TIMEOUT,
   Result,
+  fmtQuote,
   freePicks,
+  quoteOf,
   PICK_SIGN,
   unpicked,
   useLiveness,
@@ -214,6 +216,7 @@ function Details({ id, bet, match, isNew, refetch }: { id: bigint; bet: MatchBet
             pick={pickLabel(bet.creatorPick)}
             winsOn={winsOn([bet.creatorPick])}
             stake={bet.creatorStake}
+            quote={fmtQuote(quoteOf(bet.creatorStake, pot), locale)}
             state={slipState("creator")}
           />
           <Slip
@@ -223,6 +226,7 @@ function Details({ id, bet, match, isNew, refetch }: { id: bigint; bet: MatchBet
             pick={open ? mt.takerChooses(pickLabel(freeA), pickLabel(freeB)) : pickLabel(bet.takerPick)}
             winsOn={open ? mt.sameStakeShort : winsOn([bet.takerPick])}
             stake={bet.takerStake}
+            quote={fmtQuote(quoteOf(bet.takerStake, pot), locale)}
             state={slipState("taker")}
           />
         </div>

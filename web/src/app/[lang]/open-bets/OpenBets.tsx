@@ -8,7 +8,7 @@ import { LeagueFilter } from "@/components/LeagueFilter";
 import { TeamBadge } from "../match-bet/MatchBetParts";
 import { betEscrowAbi, matchBetsAbi } from "@/generated/contracts";
 import { DEPLOYMENT, fmtUsd, Status, TOKEN_SYMBOL, type Bet } from "@/lib/bets";
-import { freePicks, groupByLeague, MATCH_BETS, MatchStatus, Pick, useMatches, type MatchBet } from "@/lib/matches";
+import { fmtQuote, freePicks, groupByLeague, quoteOf, MATCH_BETS, MatchStatus, Pick, useMatches, type MatchBet } from "@/lib/matches";
 import { fmtDate, useNow } from "@/lib/time";
 import { useT } from "@/i18n/client";
 
@@ -113,7 +113,8 @@ export function OpenBets() {
                           <div className="text-[11px] text-muted">{o.theyBet}</div>
                           <div className="font-bold">{pickLabel(bet.creatorPick, match.home, match.away)}</div>
                           <div className="num text-xs text-muted">
-                            {fmtUsd(bet.creatorStake)} {TOKEN_SYMBOL}
+                            {fmtUsd(bet.creatorStake)} {TOKEN_SYMBOL} · {mt.quoteShort}{" "}
+                            {fmtQuote(quoteOf(bet.creatorStake, bet.creatorStake + bet.takerStake), locale)}
                           </div>
                         </div>
                         <div className="rounded-xl border border-accent/60 p-2.5">
@@ -124,7 +125,8 @@ export function OpenBets() {
                               .join(` ${o.or} `)}
                           </div>
                           <div className="num text-xs text-muted">
-                            {fmtUsd(bet.takerStake)} {TOKEN_SYMBOL}
+                            {fmtUsd(bet.takerStake)} {TOKEN_SYMBOL} · {mt.quoteShort}{" "}
+                            {fmtQuote(quoteOf(bet.takerStake, bet.creatorStake + bet.takerStake), locale)}
                           </div>
                         </div>
                       </div>

@@ -8,8 +8,25 @@ import { getTransactionReceipt } from "wagmi/actions";
 import { TxStatus } from "@/components/AppFrame";
 import { useConnectModal } from "@/components/ConnectModal";
 import { matchBetsAbi } from "@/generated/contracts";
-import { parseUsd, TOKEN_SYMBOL, useTokenBalance } from "@/lib/bets";
-import { freePicks, groupByLeague, MATCH_BETS, Pick, PICK_SIGN, PICKS, Result, useMatches, type Match, type PickValue } from "@/lib/matches";
+import { fmtUsd, parseUsd, TOKEN_SYMBOL, useTokenBalance } from "@/lib/bets";
+import {
+  fmtQuote,
+  freePicks,
+  groupByLeague,
+  MATCH_BETS,
+  MAX_QUOTE,
+  MIN_QUOTE,
+  parseQuote,
+  Pick,
+  PICK_SIGN,
+  PICKS,
+  QUOTE_PRESETS,
+  Result,
+  takerStakeFor,
+  useMatches,
+  type Match,
+  type PickValue,
+} from "@/lib/matches";
 import { LeagueFilter } from "@/components/LeagueFilter";
 import { TeamBadge } from "../match-bet/MatchBetParts";
 import { fmtDate, useNow } from "@/lib/time";
@@ -90,22 +107,29 @@ function Form({ match, onBack }: { match: Listed; onBack: () => void }) {
 
   const [mine, setMine] = useState<PickValue>(Pick.Home);
   const [stake, setStake] = useState("10");
+  const [quoteText, setQuoteText] = useState("2.00");
   const [opponent, setOpponent] = useState("");
 
   const label = (p: number) => (p === Pick.Home ? mt.wins(match.home) : p === Pick.Away ? mt.wins(match.away) : mt.draw);
   const myAmount = parseUsd(stake);
+  const quote = parseQuote(quoteText);
+  const quoteOk = Number.isFinite(quote) && quote >= MIN_QUOTE && quote <= MAX_QUOTE;
+  const theirAmount = quoteOk ? takerStakeFor(myAmount, quote) : 0n;
   const opp = opponent.trim();
   const [freeA, freeB] = freePicks(mine);
 
-  const problem =
-    opp && !isAddress(opp)
+  const problem = !quoteOk
+    ? mt.badQuote
+    : myAmount > 0n && theirAmount === 0n
+      ? mt.stakeTooSmall
+      : opp && !isAddress(opp)
       ? c.badAddress
       : opp && opp.toLowerCase() === address?.toLowerCase()
         ? c.sameAddress
         : address && balance.data !== undefined && myAmount > balance.data
           ? c.tooMuch
           : null;
-  const canSubmit = Boolean(address) && !send.busy && myAmount > 0n && !problem;
+  const canSubmit = Boolean(address) && !send.busy && myAmount > 0n && theirAmount > 0n && !problem;
 
   async function submit() {
     if (!address || !MATCH_BETS) return;
@@ -118,7 +142,7 @@ function Form({ match, onBack }: { match: Listed; onBack: () => void }) {
           address: contract,
           abi: matchBetsAbi,
           functionName: "create",
-          args: [match.id, mine, myAmount, (opp || zeroAddress) as Address],
+          args: [match.id, mine, myAmount, quote, (opp || zeroAddress) as Address],
         }),
       );
       const receipt = await getTransactionReceipt(wagmiConfig, { hash });
@@ -168,7 +192,47 @@ function Form({ match, onBack }: { match: Listed; onBack: () => void }) {
             <span className="text-sm text-muted">{TOKEN_SYMBOL}</span>
           </div>
         </div>
-        <div className="text-sm text-muted sm:self-end">{mt.sameStake}</div>
+        <div>
+          <span className="text-sm font-bold">{mt.quote}</span>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            {QUOTE_PRESETS.map((q) => (
+              <button
+                key={q}
+                type="button"
+                onClick={() => setQuoteText((q / 100).toFixed(2))}
+                className={`rounded-full border px-3 py-1.5 text-sm font-bold ${quote === q ? "border-accent bg-accent text-on-accent" : "border-line"}`}
+              >
+                {fmtQuote(q, locale)}
+              </button>
+            ))}
+            <input
+              className="field num !w-20"
+              inputMode="decimal"
+              value={quoteText}
+              onChange={(e) => setQuoteText(e.target.value)}
+              aria-label={mt.quote}
+            />
+          </div>
+          <span className="block text-xs text-muted">{mt.quoteHint}</span>
+        </div>
+        {quoteOk && myAmount > 0n && (
+          <div className="grid grid-cols-3 gap-2 rounded-2xl bg-surface-2 p-3 text-center text-sm sm:col-span-2">
+            <div>
+              <div className="text-[11px] text-muted">{mt.youStake}</div>
+              <div className="num font-display text-lg font-extrabold">{fmtUsd(myAmount)}</div>
+            </div>
+            <div>
+              <div className="text-[11px] text-muted">{mt.theyStake}</div>
+              <div className="num font-display text-lg font-extrabold">{fmtUsd(theirAmount)}</div>
+            </div>
+            <div>
+              <div className="text-[11px] text-muted">{mt.winnerGets}</div>
+              <div className="num font-display text-lg font-extrabold text-accent-ink">
+                {fmtUsd(myAmount + theirAmount)} {TOKEN_SYMBOL}
+              </div>
+            </div>
+          </div>
+        )}
         <label className="block sm:col-span-2">
           <span className="text-sm font-bold">{mt.opponent}</span>
           <input className="field mt-2 font-mono text-xs" placeholder="0x…" value={opponent} onChange={(e) => setOpponent(e.target.value)} />

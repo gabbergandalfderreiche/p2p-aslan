@@ -30,8 +30,8 @@ export const en: Dictionary = {
     ctaGuide: "New to crypto? Start here",
     stepsTitle: "How it works",
     steps: [
-      { title: "Pick a match", text: "You take one of the three outcomes – 1, X or 2 – and set the stake." },
-      { title: "Send the link", text: "Before kickoff your friend picks one of the two other outcomes and puts in the same amount. Now both stakes sit in the contract." },
+      { title: "Pick a match", text: "You take one of the three outcomes – 1, X or 2 – and set stake and quote." },
+      { title: "Send the link", text: "Before kickoff your friend picks one of the two other outcomes and puts in the counter-stake set by the quote. Now both stakes sit in the contract." },
       { title: "Automatic payout", text: "After the final whistle the result is confirmed through UMA. The winner gets the whole pot, nobody has to report anything." },
     ],
     rulesTitle: "Who decides who won?",
@@ -47,7 +47,7 @@ export const en: Dictionary = {
     why: "Real-money betting offered to the public needs a licence under the Swiss Money Gaming Act; Germany and the EU have similar rules. That also applies when the bet runs on a blockchain. That is why this beta runs only on the Base Sepolia testnet with tUSD – a test dollar with no value that anyone can get for free.",
     factsTitle: "What the contract can do – and what it can't",
     facts: [
-      "It holds the stakes until the bet is decided. There is no bookmaker and there are no odds – just two people betting against each other.",
+      "It holds the stakes until the bet is decided. There is no bookmaker: you set the quote yourselves, and nobody earns a margin.",
       "The operator cannot move stakes, change a running bet or set a result on its own.",
       "The result bot can list matches and report results – every report can be disputed at UMA.",
       "Fee: 0 %. Changing it would go through a 2-day timelock and never applies to running bets.",
@@ -179,10 +179,17 @@ export const en: Dictionary = {
     wins: (team: string) => `${team} wins`,
     draw: "Draw",
     opponentChooses: (a: string, b: string) =>
-      `When accepting, your opponent picks one of the two other outcomes – “${a}” or “${b}” – with the same stake. If the third one happens, you both get your money back.`,
-    sameStake: "Your opponent puts in exactly the same amount.",
+      `When accepting, your opponent picks one of the two other outcomes – “${a}” or “${b}” – and puts in the counter-stake that follows from your quote. If the third one happens, you both get your money back.`,
+    quote: "Quote for your pick",
+    quoteShort: "Quote",
+    quoteHint: "Like at a bookmaker: winnings = stake × quote. Favourite = low quote (e.g. 1.50), underdog = high quote (e.g. 3.00). 2.00 = both stake the same.",
+    youStake: "You stake",
+    theyStake: "Opponent stakes",
+    winnerGets: "Winner gets",
+    badQuote: "The quote must be between 1.01 and 10.00.",
+    stakeTooSmall: "At this quote the counter-stake is too small – stake a bit more.",
     takerChooses: (a: string, b: string) => `picks “${a}” or “${b}”`,
-    sameStakeShort: "same stake",
+    sameStakeShort: "stake set by the quote",
     thirdRefund: (label: string) => `If it ends “${label}”, both get their money back.`,
     yourChoice: (amount: string) => `What do you bet on? (${amount} tUSD)`,
     yourStake: "Your stake",
@@ -291,6 +298,22 @@ export const en: Dictionary = {
     more: "More about UMA ↗",
   },
 
+  phantomHelp: {
+    link: "Set up Phantom for the testnet – how to",
+    title: "Switch Phantom to the testnet",
+    sub: "Once, takes 30 seconds",
+    why: "This app runs on the Base Sepolia testnet with play money. Phantom only shows testnets once testnet mode is on – otherwise you see no balance and transactions fail.",
+    steps: [
+      { title: "Open Phantom", text: "Click the browser extension or open the Phantom app on your phone." },
+      { title: "Open settings", text: "Tap your account icon at the top left, then the gear ⚙ “Settings”." },
+      { title: "Developer settings", text: "At the bottom, open “Developer Settings”." },
+      { title: "Turn on testnet mode", text: "Switch “Testnet Mode” on. Base then automatically uses “Base Sepolia”." },
+      { title: "Come back and reload", text: "Reload this page and start with “Get starter balance”." },
+    ],
+    safe: "Testnet mode does not touch your real balance. You can switch it off again any time.",
+    done: "Got it",
+  },
+
   bet: {
     metaTitle: "Bet",
     back: "← Back to overview",
@@ -368,7 +391,7 @@ export const en: Dictionary = {
     steps: [
       {
         title: "Create a wallet",
-        text: "Easiest: in the app tap “Sign in” and “Sign in with passkey”. It works with Face ID or fingerprint, no app and no seed phrase. Alternatively use the free Phantom wallet (phantom.com).",
+        text: "Easiest: in the app tap “Sign in” and “Sign in with passkey”. It works with Face ID or fingerprint, no app and no seed phrase. Alternatively use the free Phantom wallet (phantom.com) – switch on testnet mode there once (Settings → Developer Settings).",
       },
       {
         title: "Get test ETH for fees",

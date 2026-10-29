@@ -5,6 +5,7 @@ import { useConnection, useSwitchChain } from "wagmi";
 import { SiteHeader } from "./SiteHeader";
 import { LegalFooter } from "./LegalFooter";
 import { BetaGate } from "./BetaGate";
+import { PhantomAutoHelp, PhantomHelpLink } from "./PhantomHelp";
 import { DEPLOYMENT } from "@/lib/bets";
 import { activeChain, NETWORK, txUrl } from "@/lib/network";
 import { useT } from "@/i18n/client";
@@ -25,7 +26,10 @@ export function AppFrame({ children }: { children: ReactNode }) {
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">
         {wrongChain && (
           <div className="card mb-6 flex flex-wrap items-center justify-between gap-3 p-4">
-            <span className="font-semibold">{t.app.wrongNetwork}</span>
+            <span>
+              <span className="block font-semibold">{t.app.wrongNetwork}</span>
+              <PhantomHelpLink />
+            </span>
             <button className="btn btn-primary !py-2 text-sm" onClick={() => switchChain.mutate({ chainId: activeChain.id })}>
               {t.app.switchTo(activeChain.name)}
             </button>
@@ -34,6 +38,7 @@ export function AppFrame({ children }: { children: ReactNode }) {
         {DEPLOYMENT ? children : <div className="card p-6 text-muted">{t.app.notDeployed}</div>}
       </main>
       <LegalFooter />
+      <PhantomAutoHelp />
     </BetaGate>
   );
 }

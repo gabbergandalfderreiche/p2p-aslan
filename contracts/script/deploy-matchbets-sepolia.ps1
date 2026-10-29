@@ -13,7 +13,7 @@ $env:CURATOR = $bot
 Write-Host ""
 Write-Host "Replace MatchBets on Base Sepolia (testnet)" -ForegroundColor Yellow
 Write-Host "  Deployer + curator : $bot (keystore p2pbet-bot)"
-Write-Host "  New rule           : the opponent picks one of the two free outcomes, same stake"
+Write-Host "  New rule           : quote per bet; opponent picks one of the two free outcomes"
 Write-Host ""
 $answer = Read-Host "Type DEPLOY to send the transaction"
 if ($answer -ne "DEPLOY") { Write-Host "Cancelled."; exit 1 }

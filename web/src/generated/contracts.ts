@@ -780,6 +780,32 @@ export const matchBetsAbi = [
   },
   {
     "type": "function",
+    "name": "MAX_QUOTE",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "MIN_QUOTE",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "RESULT_DELAY",
     "inputs": [],
     "outputs": [
@@ -988,6 +1014,11 @@ export const matchBetsAbi = [
         "name": "stake",
         "type": "uint96",
         "internalType": "uint96"
+      },
+      {
+        "name": "quote",
+        "type": "uint16",
+        "internalType": "uint16"
       },
       {
         "name": "invited",
@@ -1680,6 +1711,11 @@ export const matchBetsAbi = [
   {
     "type": "error",
     "name": "InvalidPick",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidQuote",
     "inputs": []
   },
   {
