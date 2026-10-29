@@ -2629,14 +2629,14 @@ export const testDollarAbi = [
 export const deployments: Partial<Record<number, Deployment>> = {
   "84532": {
     "admin": "0xbD7C9af9Cd062e3F099d8442393052dd71744c01",
-    "block": 51458427,
+    "block": 51732467,
     "bondCurrency": "0x7E6d9618Ba8a87421609352d6e711958A97e2512",
     "chainId": 84532,
-    "escrow": "0x268e2876efeF44b8C2a8aA5d11eB29d100d1b5C3",
-    "matchBets": "0xb7D1BC3B2af9cbC89608441dF22D184745D96464",
-    "matchBetsPrevious": "0xab028046C939A6B19A74f1E5D0581C99836E1a97",
+    "crash": "0x28EB4d15B572573a7E24853Ea5CcE3D7e4828785",
+    "escrow": "0x4B75f2FBC5d68E04f956a5FA03Ba56f8d089BbB8",
+    "matchBets": "0x3Fc14F91E23d7FB464677281A954b4e749046051",
     "oracle": "0x0F7fC5E6482f096380db6158f978167b57388deE",
-    "timelock": "0x006CB046976F0fD2e753ab078566625B58b6536e",
-    "token": "0x1bCB8c8faaaE779E2E67eF4543588c1C0bA8a8c4"
+    "timelock": "0xFB15d5E5102177C0a1ce4c4f6aBF41F8c051AC55",
+    "token": "0xA3eF24a23e9b00698f13AeF42538e7E37e47E076"
   }
 };
