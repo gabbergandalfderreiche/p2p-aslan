@@ -15,6 +15,8 @@ import { useT } from "@/i18n/client";
 import { LiveGraph, liveOf } from "./LiveGraph";
 import { useDen, useFrameClock } from "./useDen";
 
+/** Only the house owner (Oli's wallet, the timelock admin) tops up the pot; players never see that button. */
+const POT_OWNER = "0xbd7c9af9cd062e3f099d8442393052dd71744c01";
 const STAKES = [1, 5, 10, 25];
 const AUTOS = ["1.5", "2", "3", "10"];
 const x = (h: number) => (h / 100).toFixed(2);
@@ -360,7 +362,7 @@ export function LionDen() {
                 {fmtUsd(BigInt(house?.pot ?? 0))} {TOKEN_SYMBOL}
               </span>
             </div>
-            {address && house?.house && (
+            {address?.toLowerCase() === POT_OWNER && house?.house && (
               <button className="mt-2 text-xs font-semibold underline" disabled={Boolean(send.busy)} onClick={() => moveIn(false)}>
                 {g.fundPot(moveAmount)}
               </button>
