@@ -226,7 +226,7 @@ export function LionDen() {
         <p className="w-full max-w-2xl text-sm text-muted">{g.lead}</p>
       </header>
 
-      <section className="den-panel p-3 sm:p-5">
+      <section className="den-panel flex flex-col p-3 sm:p-5">
         <LiveGraph
           game={den.game}
           offset={den.offset}
@@ -234,7 +234,7 @@ export function LionDen() {
           lostStake={lostStake?.round === roundId ? lostStake.text : null}
           lastCrash={den.game?.history[0]?.crash ?? null}
         />
-        <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+        <div className="order-2 mt-3 flex gap-2 overflow-x-auto pb-1 sm:order-1">
           {(den.game?.history ?? []).map((h) => (
             <span
               key={h.round}
@@ -245,10 +245,10 @@ export function LionDen() {
           ))}
         </div>
 
-        <div className="mt-4 grid gap-5 border-t border-white/10 pt-5 sm:grid-cols-2 sm:gap-0 sm:divide-x sm:divide-white/10">
+        <div className="order-3 mt-3 grid gap-3 border-t border-white/10 pt-3 sm:order-2 sm:mt-4 sm:grid-cols-2 sm:gap-0 sm:divide-x sm:divide-white/10 sm:pt-5">
           <div className="sm:pr-6">
-            <div className="mb-2 text-sm font-bold">{g.stake}</div>
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="mb-1.5 text-sm font-bold sm:mb-2">{g.stake}</div>
+            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
               {STAKES.map((v) => (
                 <Chip key={v} active={Number(stake) === v} onClick={() => setStake(String(v))}>
                   {v}
@@ -256,7 +256,7 @@ export function LionDen() {
               ))}
               <div className="flex items-center rounded-xl border border-white/15 bg-black/30 pr-3">
                 <input
-                  className="num w-20 bg-transparent px-3 py-2 text-lg font-bold outline-none"
+                  className="num w-16 bg-transparent px-3 py-1.5 text-base font-bold outline-none sm:w-20 sm:py-2 sm:text-lg"
                   inputMode="decimal"
                   value={stake}
                   onChange={(e) => setStake(e.target.value)}
@@ -265,11 +265,11 @@ export function LionDen() {
                 <span className="text-xs font-bold text-muted">{TOKEN_SYMBOL}</span>
               </div>
             </div>
-            <p className="mt-2 text-xs text-muted">{g.stakeHint}</p>
+            <p className="mt-2 hidden text-xs text-muted sm:block">{g.stakeHint}</p>
           </div>
           <div className="sm:pl-6">
-            <div className="mb-2 text-sm font-bold">{g.auto}</div>
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="mb-1.5 text-sm font-bold sm:mb-2">{g.auto}</div>
+            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
               <Chip active={!autoOn} onClick={() => setAutoOn(false)}>
                 {g.autoOff.toUpperCase()}
               </Chip>
@@ -287,7 +287,7 @@ export function LionDen() {
               ))}
               <div className={`flex items-center rounded-xl border bg-black/30 pr-3 ${autoOn ? "border-accent" : "border-white/15"}`}>
                 <input
-                  className="num w-20 bg-transparent px-3 py-2 text-lg font-bold outline-none"
+                  className="num w-16 bg-transparent px-3 py-1.5 text-base font-bold outline-none sm:w-20 sm:py-2 sm:text-lg"
                   inputMode="decimal"
                   value={autoText}
                   onFocus={() => setAutoOn(true)}
@@ -300,10 +300,11 @@ export function LionDen() {
                 <span className="text-xs font-bold text-muted">x</span>
               </div>
             </div>
-            <p className="mt-2 text-xs text-muted">{autoOn ? g.autoHintOn : g.autoHintOff}</p>
+            <p className="mt-2 hidden text-xs text-muted sm:block">{autoOn ? g.autoHintOn : g.autoHintOff}</p>
           </div>
         </div>
 
+        <div className="order-4 sm:order-3">
           {!stakeOk && <p className="mt-3 text-sm font-semibold text-bad">{g.badStake}</p>}
           {!autoOk && <p className="mt-3 text-sm font-semibold text-bad">{g.badTarget}</p>}
           {den.loggedIn && amount > balance && <p className="mt-3 text-sm font-semibold text-bad">{g.depositFirst}</p>}
@@ -313,7 +314,11 @@ export function LionDen() {
             </p>
           )}
 
-          <div className="den-action mt-5">{action}</div>
+        </div>
+
+        {/* On phones the button sits right under the field, on desktop below the controls. */}
+        <div className="order-1 sm:order-4">
+          <div className="den-action mt-3 sm:mt-5">{action}</div>
           {message && (
             <p className={`mt-3 text-sm font-semibold ${message.ok ? "text-good" : "text-bad"}`}>
               {message.text}{" "}
@@ -324,6 +329,7 @@ export function LionDen() {
               )}
             </p>
           )}
+        </div>
       </section>
 
       <div>
@@ -437,7 +443,7 @@ function Chip({ active = false, onClick, children }: { active?: boolean; onClick
     <button
       type="button"
       onClick={onClick}
-      className={`num min-w-12 rounded-full border px-4 py-2 text-sm font-extrabold transition-colors ${active ? "border-accent bg-accent text-on-accent shadow-[0_0_18px_rgba(245,181,58,0.45)]" : "border-white/15 bg-black/20 hover:border-accent"}`}
+      className={`num min-w-10 rounded-full border px-3 py-1.5 text-sm font-extrabold sm:min-w-12 sm:px-4 sm:py-2 transition-colors ${active ? "border-accent bg-accent text-on-accent shadow-[0_0_18px_rgba(245,181,58,0.45)]" : "border-white/15 bg-black/20 hover:border-accent"}`}
     >
       {children}
     </button>

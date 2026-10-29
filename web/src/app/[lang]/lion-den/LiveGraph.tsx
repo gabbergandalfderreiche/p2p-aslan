@@ -130,7 +130,7 @@ export function LiveGraph({
   const gridY = [1, 2, 5, 10, 25, 50, 100, 250, 500, 1000].filter((v) => v < maxY);
 
   return (
-    <div ref={box} className={`den-field relative h-[20rem] overflow-hidden rounded-[22px] text-white sm:h-[30rem] ${crashed ? "den-shake" : ""}`}>
+    <div ref={box} className={`den-field relative h-[17rem] overflow-hidden rounded-[22px] text-white sm:h-[30rem] ${crashed ? "den-shake" : ""}`}>
       <svg className="absolute inset-0 h-full w-full" viewBox={`0 0 ${VW} ${VH}`} preserveAspectRatio="none" aria-hidden>
         <defs>
           <filter id="curve-glow" x="-20%" y="-20%" width="140%" height="140%">
