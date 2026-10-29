@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { BETTING_MS, GROWTH, multiplierAt, type DenState } from "@/lib/den/shared";
 import { useT } from "@/i18n/client";
-import { RunningLion } from "./RunningLion";
+import Image from "next/image";
 
 /** Where the round stands at `now`, from the polled state. Pure: the animation never decides anything. */
 export function liveOf(game: DenState | null, now: number, offset: number) {
@@ -58,10 +58,21 @@ const GREEN = "#3ddc84";
 const RED = "#ff5a4e";
 const VW = 400;
 const VH = 220;
+// The lion picture (449 × 280) has its own golden ground line; its right end, where the curve tip sits,
+// is at ANCHOR and the line climbs at TILT degrees, which the slope rotation compensates.
+const ANCHOR_X = 92;
+const ANCHOR_Y = 61;
+const TILT = 13.8;
+
+function Lion({ width, className }: { width: number; className: string }) {
+  return (
+    <Image src="/den-lion.png" alt="" width={449} height={280} priority className={className} style={{ width, height: "auto" }} draggable={false} />
+  );
+}
 
 /**
- * The game field: countdown between rounds, the climbing curve with the running lion on it, and a
- * red crash where the lion stumbles out of the picture.
+ * The game field: countdown between rounds, the climbing curve with the lion running on its tip, and
+ * a red crash where the lion tumbles out of the picture.
  */
 export function LiveGraph({
   game,
@@ -101,8 +112,8 @@ export function LiveGraph({
   const ds = Math.max(seconds * 0.02, 0.05);
   const dx = ((x(seconds) - x(Math.max(seconds - ds, 0))) / VW) * size.w;
   const dy = ((y(mAt(seconds)) - y(mAt(Math.max(seconds - ds, 0)))) / VH) * size.h;
-  const angle = flying || crashed ? Math.max(-55, Math.min(0, (Math.atan2(dy, dx || 1) * 180) / Math.PI)) : 0;
-  const lionWidth = Math.max(72, Math.min(170, size.w * 0.17));
+  const angle = flying || crashed ? Math.max(-30, Math.min(0, (Math.atan2(dy, dx || 1) * 180) / Math.PI)) : 0;
+  const lionWidth = Math.max(130, Math.min(300, size.w * 0.3));
   const tipLeft = (tip[0] / VW) * 100;
   const tipTop = (tip[1] / VH) * 100;
 
@@ -157,17 +168,15 @@ export function LiveGraph({
         <div
           key={crashed ? `crash-${game?.round}` : "run"}
           className="pointer-events-none absolute"
-          style={{ left: `${tipLeft}%`, top: `${tipTop}%`, transform: `translate(-50%, -91%) rotate(${angle}deg)`, transformOrigin: "50% 91%" }}
+          style={{
+            left: `${tipLeft}%`,
+            top: `${tipTop}%`,
+            transform: `translate(-${ANCHOR_X}%, -${ANCHOR_Y}%) rotate(${angle + TILT}deg)`,
+            transformOrigin: `${ANCHOR_X}% ${ANCHOR_Y}%`,
+          }}
         >
-          {flying && (
-            <div className="lion-trails absolute right-[70%] top-[35%] h-[45%] w-[120%]" aria-hidden>
-              <span style={{ top: "15%" }} />
-              <span style={{ top: "45%", animationDelay: "0.12s" }} />
-              <span style={{ top: "75%", animationDelay: "0.24s" }} />
-            </div>
-          )}
           <div className={crashed ? "lion-tumble" : ""}>
-            <RunningLion mode={crashed ? "crash" : "run"} width={lionWidth} />
+            <Lion width={lionWidth} className={flying ? "lion-run" : ""} />
           </div>
         </div>
       )}
@@ -177,16 +186,16 @@ export function LiveGraph({
         </span>
       )}
       {live.phase === "betting" && (
-        <div className="pointer-events-none absolute bottom-[6%] left-[8%]" aria-hidden>
-          <RunningLion mode="idle" width={lionWidth * 0.8} />
+        <div className="pointer-events-none absolute bottom-[3%] left-[3%]" aria-hidden>
+          <Lion width={lionWidth * 0.8} className="lion-idle" />
         </div>
       )}
       {crashed && <div key={`flash-${game?.round}`} className="den-flash pointer-events-none absolute inset-0" aria-hidden />}
 
-      <div className="pointer-events-none relative flex h-full flex-col items-center justify-center px-4 text-center sm:items-end sm:pr-[10%]">
+      <div className="pointer-events-none relative flex h-full flex-col items-center justify-center px-4 text-center">
         {live.phase === "waiting" && <div className="font-display text-2xl font-extrabold opacity-80">{g.connecting}</div>}
         {live.phase === "betting" && (
-          <div className="sm:text-right">
+          <div>
             <div className="text-sm font-bold uppercase tracking-widest opacity-80">{g.nextRound}</div>
             <div className="num font-display text-7xl font-extrabold sm:text-8xl">{(live.msLeft / 1000).toFixed(1)}s</div>
             <div className="mt-2 inline-block rounded-full bg-black/35 px-4 py-1 text-sm font-bold">{g.placeBets}</div>
@@ -198,7 +207,7 @@ export function LiveGraph({
           </div>
         )}
         {flying && (
-          <div className="sm:text-right">
+          <div>
             <div className="num font-display text-7xl font-extrabold drop-shadow-lg sm:text-9xl" style={{ color: live.multiplier >= 200 ? GREEN : "white" }}>
               {fmt(live.multiplier)}x
             </div>
@@ -208,7 +217,7 @@ export function LiveGraph({
           </div>
         )}
         {crashed && (
-          <div className="sm:text-right">
+          <div>
             <div className="den-pop font-display text-3xl font-extrabold uppercase tracking-wide sm:text-4xl" style={{ color: RED }}>
               💥 {g.roaredTitle}
             </div>

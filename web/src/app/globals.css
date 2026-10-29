@@ -227,87 +227,30 @@ body {
   box-shadow: 0 4px 0 #b77708, 0 0 28px rgba(245, 181, 58, 0.35);
 }
 
-/* Running lion: legs swing around hip/shoulder, body bobs, tail and mane flutter. */
-.lion-figure g {
-  transform-box: view-box;
-}
+/* Lion image on the curve: a light gallop while running, slow breathing while waiting. */
 @media (prefers-reduced-motion: no-preference) {
-  .lion-run .lion-leg-a {
-    animation: lion-leg 0.38s ease-in-out infinite alternate;
+  .lion-run {
+    animation: lion-gallop 0.32s ease-in-out infinite alternate;
   }
-  .lion-run .lion-leg-b {
-    animation: lion-leg 0.38s ease-in-out infinite alternate-reverse;
-  }
-  .lion-run .lion-bob {
-    animation: lion-bob 0.19s ease-in-out infinite alternate;
-  }
-  .lion-run .lion-tail {
-    animation: lion-tail 0.38s ease-in-out infinite alternate;
-  }
-  .lion-run .lion-mane {
-    animation: lion-mane 0.19s ease-in-out infinite alternate;
-  }
-  .lion-run .lion-glow {
-    animation: lion-glow 0.38s ease-in-out infinite alternate;
-  }
-  .lion-idle .lion-bob {
+  .lion-idle {
     animation: lion-breathe 2.4s ease-in-out infinite;
-  }
-  .lion-idle .lion-tail {
-    animation: lion-tail 1.6s ease-in-out infinite alternate;
   }
   .lion-tumble {
     animation: lion-tumble 1.3s cubic-bezier(0.3, 0.1, 0.6, 1) forwards;
   }
-  .lion-crash .lion-leg-a {
-    transform: rotate(-40deg);
-  }
-  .lion-crash .lion-leg-b {
-    transform: rotate(35deg);
-  }
-  .lion-trails span {
-    position: absolute;
-    right: 0;
-    height: 3px;
-    width: 100%;
-    border-radius: 3px;
-    background: linear-gradient(90deg, transparent, rgba(255, 200, 80, 0.9));
-    animation: lion-trail 0.45s linear infinite;
-  }
 }
-@keyframes lion-leg {
-  from { transform: rotate(34deg); }
-  to { transform: rotate(-40deg); }
-}
-@keyframes lion-bob {
-  from { transform: translateY(0); }
-  to { transform: translateY(-4px); }
-}
-@keyframes lion-tail {
-  from { transform: rotate(-14deg); }
-  to { transform: rotate(20deg); }
-}
-@keyframes lion-mane {
-  from { transform: rotate(-3deg) scale(1); }
-  to { transform: rotate(3deg) scale(1.05); }
-}
-@keyframes lion-glow {
-  from { opacity: 0.55; }
-  to { opacity: 1; }
+@keyframes lion-gallop {
+  from { transform: translateY(0) rotate(0); }
+  to { transform: translateY(-5%) rotate(-2deg); }
 }
 @keyframes lion-breathe {
-  0%, 100% { transform: translateY(0) scaleY(1); }
-  50% { transform: translateY(-1px) scaleY(1.02); }
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-1%) scale(1.015); }
 }
 @keyframes lion-tumble {
   0% { transform: translate(0, 0) rotate(0); opacity: 1; }
-  25% { transform: translate(18%, -45%) rotate(-25deg); opacity: 1; }
-  100% { transform: translate(55%, 160%) rotate(210deg); opacity: 0; }
-}
-@keyframes lion-trail {
-  from { transform: scaleX(0.3); opacity: 0; transform-origin: right; }
-  40% { opacity: 1; }
-  to { transform: scaleX(1); opacity: 0; transform-origin: right; }
+  25% { transform: translate(10%, -35%) rotate(-20deg); opacity: 1; }
+  100% { transform: translate(40%, 160%) rotate(160deg); opacity: 0; }
 }
 
 /* Night sky behind the crash game. */
