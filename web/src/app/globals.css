@@ -204,13 +204,33 @@ body {
 }
 @media (prefers-reduced-motion: no-preference) {
   .den-shake {
-    animation: den-shake 0.4s ease-in-out;
+    animation: den-shake 0.5s ease-in-out;
   }
+  .den-flash {
+    animation: den-flash 1.2s ease-out forwards;
+  }
+  .den-pop {
+    animation: den-pop 0.45s cubic-bezier(0.2, 1.6, 0.4, 1);
+  }
+}
+.den-flash {
+  background: radial-gradient(circle at 50% 50%, rgba(255, 90, 78, 0.55), rgba(255, 90, 78, 0.15) 60%, transparent 80%);
+  opacity: 0.35;
+}
+@keyframes den-flash {
+  0% { opacity: 1; }
+  100% { opacity: 0.35; }
+}
+@keyframes den-pop {
+  0% { transform: scale(0.6); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
 }
 @keyframes den-shake {
   0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-6px); }
-  75% { transform: translateX(6px); }
+  20% { transform: translateX(-10px); }
+  40% { transform: translateX(9px); }
+  60% { transform: translateX(-6px); }
+  80% { transform: translateX(4px); }
 }
 
 /* Diagonal split behind the hero: one half per side of the bet. */

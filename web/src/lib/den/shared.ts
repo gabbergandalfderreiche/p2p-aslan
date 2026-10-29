@@ -4,7 +4,7 @@
  */
 
 export const BETTING_MS = 6_000; // place bets
-export const PAUSE_MS = 3_000; // show the crash before the next round
+export const PAUSE_MS = 4_000; // show the crash before the next round
 export const GROWTH = 0.00007; // multiplier = e^(GROWTH × ms in flight): 2x after ~9.9 s, 10x after ~33 s
 export const MIN_STAKE = 100_000; // 0.1 tUSD
 export const MAX_STAKE = 100_000_000; // 100 tUSD

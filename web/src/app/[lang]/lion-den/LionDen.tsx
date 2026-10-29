@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { erc20Abi, type Address } from "viem";
 import { useConnection } from "wagmi";
 import { useConnectModal } from "@/components/ConnectModal";
@@ -15,8 +15,8 @@ import { useT } from "@/i18n/client";
 import { LiveGraph, liveOf } from "./LiveGraph";
 import { useDen, useFrameClock } from "./useDen";
 
-const STAKES = ["1", "5", "10", "25"];
-const AUTOS = ["", "1.5", "2", "3", "10"];
+const STAKES = [1, 5, 10, 25];
+const AUTOS = ["1.5", "2", "3", "10"];
 const x = (h: number) => (h / 100).toFixed(2);
 
 /** Hidden play-money crash game with a game account: deposit once, play without transactions, withdraw. */
@@ -33,7 +33,9 @@ export function LionDen() {
   const send = useSend(t);
 
   const [stake, setStake] = useState("5");
-  const [auto, setAuto] = useState("");
+  const [autoOn, setAutoOn] = useState(false);
+  const [autoText, setAutoText] = useState("2.00");
+  const [lostStake, setLostStake] = useState<{ round: number; text: string } | null>(null);
   const [queued, setQueued] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ ok: boolean; text: string; tx?: string } | null>(null);
@@ -43,7 +45,7 @@ export function LionDen() {
   const me = address?.toLowerCase();
   const myBet = den.game?.bets.find((b) => b.player.toLowerCase() === me) ?? null;
   const amount = Number(parseUsd(stake));
-  const autoValue = auto ? Math.round(Number(auto.replace(",", ".")) * 100) : null;
+  const autoValue = autoOn ? Math.round(Number(autoText.replace(",", ".")) * 100) : null;
   const stakeOk = amount >= MIN_STAKE && amount <= MAX_STAKE;
   const autoOk = autoValue === null || (autoValue >= 101 && autoValue <= MAX_AUTO);
 
@@ -84,6 +86,18 @@ export function LionDen() {
     return () => clearTimeout(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- placeBet reads the latest inputs
   }, [queued, live.phase, myBet, den.loggedIn]);
+
+  // Make a loss as obvious as a win: when the lion roars while we are still in, say so.
+  const roundId = den.game?.round ?? 0;
+  useEffect(() => {
+    if (live.phase !== "crashed" || !myBet || myBet.cashout !== null || lostStake?.round === roundId) return;
+    const text = fmtUsd(BigInt(myBet.stake));
+    const id = setTimeout(() => {
+      setLostStake({ round: roundId, text });
+      setMessage({ ok: false, text: g.lostMessage(x(live.multiplier), text) });
+    }, 0);
+    return () => clearTimeout(id);
+  }, [live.phase, live.multiplier, myBet, roundId, lostStake, g]);
 
   async function cashOut() {
     setBusy(true);
@@ -209,56 +223,102 @@ export function LionDen() {
         <p className="mt-1 max-w-2xl text-muted">{g.lead}</p>
       </header>
 
+      <section className="card p-3 sm:p-4">
+        <LiveGraph
+          live={live}
+          round={roundId}
+          cashedAt={cashedAt}
+          lostStake={lostStake?.round === roundId ? lostStake.text : null}
+          lastCrash={den.game?.history[0]?.crash ?? null}
+        />
+        <div className="mt-3 flex gap-1.5 overflow-x-auto pb-1">
+          {(den.game?.history ?? []).map((h) => (
+            <span
+              key={h.round}
+              className={`num shrink-0 rounded-md px-2 py-1 text-xs font-bold ${h.crash >= 200 ? "bg-good/20 text-good" : "bg-accent-2/15 text-accent-2"}`}
+            >
+              {x(h.crash)}x
+            </span>
+          ))}
+        </div>
+      </section>
+
       <div className="grid gap-6 lg:grid-cols-[1fr_22rem]">
         <section className="card p-5">
-          <LiveGraph live={live} cashedAt={cashedAt} />
-          <div className="mt-3 flex gap-1.5 overflow-x-auto pb-1">
-            {(den.game?.history ?? []).map((h) => (
-              <span
-                key={h.round}
-                className={`num shrink-0 rounded-md px-2 py-1 text-xs font-bold ${h.crash >= 200 ? "bg-good/20 text-good" : "bg-accent-2/15 text-accent-2"}`}
-              >
-                {x(h.crash)}x
-              </span>
-            ))}
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label={g.stake} hint={g.stakeHint}>
+              <div className="flex items-center gap-2">
+                <input
+                  className="field num text-lg font-bold"
+                  inputMode="decimal"
+                  value={stake}
+                  onChange={(e) => setStake(e.target.value)}
+                  aria-label={g.stake}
+                />
+                <span className="text-sm font-bold text-muted">{TOKEN_SYMBOL}</span>
+              </div>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                <Chip onClick={() => setStake(String(Math.max(0.1, Number(stake.replace(",", ".")) / 2 || 0)))}>½</Chip>
+                <Chip onClick={() => setStake(String(Math.min(100, (Number(stake.replace(",", ".")) || 0) * 2)))}>×2</Chip>
+                {STAKES.map((v) => (
+                  <Chip key={v} active={Number(stake) === v} onClick={() => setStake(String(v))}>
+                    {v}
+                  </Chip>
+                ))}
+              </div>
+            </Field>
+            <Field
+              label={g.auto}
+              hint={autoOn ? g.autoHintOn : g.autoHintOff}
+              toggle={
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={autoOn}
+                  onClick={() => setAutoOn((v) => !v)}
+                  className={`relative h-6 w-11 rounded-full transition-colors ${autoOn ? "bg-good" : "bg-line"}`}
+                >
+                  <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${autoOn ? "left-[1.375rem]" : "left-0.5"}`} />
+                  <span className="sr-only">{g.auto}</span>
+                </button>
+              }
+            >
+              <div className={`flex items-center gap-2 ${autoOn ? "" : "opacity-50"}`}>
+                <input
+                  className="field num text-lg font-bold"
+                  inputMode="decimal"
+                  value={autoText}
+                  disabled={!autoOn}
+                  onChange={(e) => setAutoText(e.target.value)}
+                  aria-label={g.auto}
+                />
+                <span className="text-sm font-bold text-muted">x</span>
+              </div>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {AUTOS.map((v) => (
+                  <Chip
+                    key={v}
+                    active={autoOn && Number(autoText) === Number(v)}
+                    onClick={() => {
+                      setAutoOn(true);
+                      setAutoText(Number(v).toFixed(2));
+                    }}
+                  >
+                    {v}x
+                  </Chip>
+                ))}
+              </div>
+            </Field>
           </div>
 
-          <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            <div>
-              <span className="text-sm font-bold">{g.stake}</span>
-              <div className="mt-2 flex flex-wrap items-center gap-2">
-                {STAKES.map((v) => (
-                  <button
-                    key={v}
-                    type="button"
-                    onClick={() => setStake(v)}
-                    className={`rounded-full border px-3 py-1.5 text-sm font-bold ${stake === v ? "border-accent bg-accent text-on-accent" : "border-line"}`}
-                  >
-                    {v}
-                  </button>
-                ))}
-                <input className="field num !w-20" inputMode="decimal" value={stake} onChange={(e) => setStake(e.target.value)} aria-label={g.stake} />
-              </div>
-            </div>
-            <div>
-              <span className="text-sm font-bold">{g.auto}</span>
-              <div className="mt-2 flex flex-wrap items-center gap-2">
-                {AUTOS.map((v) => (
-                  <button
-                    key={v || "off"}
-                    type="button"
-                    onClick={() => setAuto(v)}
-                    className={`rounded-full border px-3 py-1.5 text-sm font-bold ${auto === v ? "border-accent bg-accent text-on-accent" : "border-line"}`}
-                  >
-                    {v ? `${v}x` : g.autoOff}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-          {!stakeOk && <p className="mt-2 text-sm font-semibold text-bad">{g.badStake}</p>}
-          {!autoOk && <p className="mt-2 text-sm font-semibold text-bad">{g.badTarget}</p>}
-          {den.loggedIn && amount > balance && <p className="mt-2 text-sm font-semibold text-bad">{g.depositFirst}</p>}
+          {!stakeOk && <p className="mt-3 text-sm font-semibold text-bad">{g.badStake}</p>}
+          {!autoOk && <p className="mt-3 text-sm font-semibold text-bad">{g.badTarget}</p>}
+          {den.loggedIn && amount > balance && <p className="mt-3 text-sm font-semibold text-bad">{g.depositFirst}</p>}
+          {stakeOk && autoOk && autoValue !== null && (
+            <p className="mt-3 text-sm text-muted">
+              {g.autoPreview(x(autoValue), fmtUsd(BigInt(Math.floor((amount * autoValue) / 100))), Math.min(99, 99 / (autoValue / 100)).toFixed(1))}
+            </p>
+          )}
 
           <div className="mt-4">{action}</div>
           {message && (
@@ -375,6 +435,41 @@ export function LionDen() {
         {den.game && <Proof commit={den.game.commit} seed={den.game.seed} round={den.game.round} />}
       </section>
     </div>
+  );
+}
+
+function Field({
+  label,
+  hint,
+  toggle,
+  children,
+}: {
+  label: string;
+  hint: string;
+  toggle?: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <div className="rounded-2xl border-2 border-line bg-surface-2/50 p-4">
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <span className="text-xs font-extrabold uppercase tracking-wide text-muted">{label}</span>
+        {toggle}
+      </div>
+      {children}
+      <p className="mt-2 text-xs text-muted">{hint}</p>
+    </div>
+  );
+}
+
+function Chip({ active = false, onClick, children }: { active?: boolean; onClick: () => void; children: ReactNode }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`num min-w-10 rounded-lg border px-2.5 py-1 text-sm font-bold ${active ? "border-accent bg-accent text-on-accent" : "border-line bg-surface hover:border-accent"}`}
+    >
+      {children}
+    </button>
   );
 }
 
