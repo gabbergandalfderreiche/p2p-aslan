@@ -21,6 +21,8 @@ contract DeployTest is Test {
         assertEq(d.matchBets.curator(), makeAddr("curator"));
         assertEq(d.oracle, 0x0F7fC5E6482f096380db6158f978167b57388deE);
         assertEq(d.matchBets.liveness(), 2 hours);
+        assertEq(TestDollar(address(d.token)).minter(), address(d.crash));
+        assertEq(address(d.crash.token()), address(d.token));
     }
 
     function test_RunRefusesMainnet() public {

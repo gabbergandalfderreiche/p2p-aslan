@@ -196,6 +196,23 @@ body {
   100% { transform: translate(var(--drift), 105vh) rotate(720deg); opacity: 0.9; }
 }
 
+/* Night sky behind the crash game. */
+.den-sky {
+  background:
+    radial-gradient(circle at 80% 15%, rgba(245, 181, 58, 0.25), transparent 35%),
+    linear-gradient(180deg, #1b1430 0%, #2a1a2e 55%, #3a2018 100%);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .den-shake {
+    animation: den-shake 0.4s ease-in-out;
+  }
+}
+@keyframes den-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  75% { transform: translateX(6px); }
+}
+
 /* Diagonal split behind the hero: one half per side of the bet. */
 .versus {
   background: linear-gradient(115deg, color-mix(in srgb, var(--accent) 16%, transparent) 50%, color-mix(in srgb, var(--accent-2) 12%, transparent) 50%);

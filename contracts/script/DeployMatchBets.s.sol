@@ -58,6 +58,7 @@ contract DeployMatchBets is Script {
         vm.serializeAddress(k, "oracle", oracle);
         vm.serializeAddress(k, "bondCurrency", bondCurrency);
         vm.serializeAddress(k, "matchBetsPrevious", vm.parseJsonAddress(json, ".matchBets"));
+        if (vm.keyExistsJson(json, ".crash")) vm.serializeAddress(k, "crash", vm.parseJsonAddress(json, ".crash"));
         string memory out = vm.serializeAddress(k, "matchBets", address(bets));
         vm.writeJson(out, path);
         console.log("MatchBets replaced, written to", path);

@@ -7,6 +7,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {TimelockController} from "@openzeppelin/contracts/governance/TimelockController.sol";
 
 import {BetEscrow} from "../src/BetEscrow.sol";
+import {CrashGame} from "../src/CrashGame.sol";
 import {MatchBets} from "../src/MatchBets.sol";
 import {TestDollar} from "../src/TestDollar.sol";
 import {IOptimisticOracleV3} from "../src/interfaces/IOptimisticOracleV3.sol";
@@ -15,7 +16,8 @@ import {MockBondToken} from "../test/mocks/MockBondToken.sol";
 import {UmaBaseSepolia} from "./UmaAddresses.sol";
 
 /// @notice Deploys the testnet beta: TestDollar (play money), a TimelockController, BetEscrow (custom
-///         bets) and MatchBets (football bets decided by UMA; on the local node by a mock oracle).
+///         bets), MatchBets (football bets decided by UMA; on the local node by a mock oracle) and
+///         CrashGame (play-money crash game, the only contract allowed to mint tUSD).
 ///
 /// End state, checked at the end of `deploy`:
 ///  - TimelockController: only ADMIN can propose/execute/cancel, no admin can bypass the delay.
@@ -38,6 +40,7 @@ contract Deploy is Script {
         TimelockController timelock;
         BetEscrow escrow;
         MatchBets matchBets;
+        CrashGame crash; // only when TestDollar is deployed here (it mints the winnings)
         address oracle;
         address bondCurrency;
     }
@@ -67,7 +70,14 @@ contract Deploy is Script {
         public
         returns (Deployment memory d)
     {
-        d.token = token == address(0) ? IERC20(address(new TestDollar())) : IERC20(token);
+        if (token == address(0)) {
+            TestDollar play = new TestDollar();
+            d.crash = new CrashGame(play);
+            play.setMinter(address(d.crash));
+            d.token = IERC20(address(play));
+        } else {
+            d.token = IERC20(token);
+        }
 
         address[] memory roles = new address[](1);
         roles[0] = admin;
@@ -109,6 +119,9 @@ contract Deploy is Script {
         if (d.escrow.feeBps() != 0) revert SetupCheckFailed("fee");
         if (d.matchBets.owner() != address(t)) revert SetupCheckFailed("match bets owner");
         if (d.matchBets.feeBps() != 0) revert SetupCheckFailed("match bets fee");
+        if (address(d.crash) != address(0) && TestDollar(address(d.token)).minter() != address(d.crash)) {
+            revert SetupCheckFailed("crash minter");
+        }
     }
 
     function _write(Deployment memory d, address admin) internal {
@@ -121,6 +134,7 @@ contract Deploy is Script {
         vm.serializeAddress(k, "escrow", address(d.escrow));
         vm.serializeAddress(k, "oracle", d.oracle);
         vm.serializeAddress(k, "bondCurrency", d.bondCurrency);
+        vm.serializeAddress(k, "crash", address(d.crash));
         string memory json = vm.serializeAddress(k, "matchBets", address(d.matchBets));
 
         string memory path = string.concat(vm.projectRoot(), "/deployments/", vm.toString(block.chainid), ".json");

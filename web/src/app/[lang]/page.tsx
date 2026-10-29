@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Lion } from "@/components/lion/Lion";
+import { EggLion } from "@/components/lion/EggLion";
 import { SiteHeader } from "@/components/SiteHeader";
 import { LegalFooter } from "@/components/LegalFooter";
 import { UmaInfo } from "@/components/UmaInfo";
@@ -37,7 +37,7 @@ export default async function Home() {
               </div>
             </div>
             <div className="mx-auto">
-              <Lion size={260} animated title={t.brand.mascot} />
+              <EggLion size={260} animated title={t.brand.mascot} />
             </div>
           </div>
         </section>

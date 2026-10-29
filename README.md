@@ -24,6 +24,13 @@ apply in the EU, so the deploy script refuses to run on mainnet.
 - After kickoff + 2 h the bot asserts the result after regular time to UMA with a bond. Undisputed for 2 h → it stands; disputes go to UMA's vote, a rejected assertion can be redone.
 - Then anyone (normally the bot) settles: winner takes the pot. Third outcome, match void, or no confirmed result within 14 days → refunds.
 
+## Easter egg: Löwensprung (`CrashGame`)
+
+Double-click the lion. A play-money crash game against the house: pick an auto cash-out, the crash
+point comes from the hash of the block after the stake (about 1 % bust at 1.00x, otherwise
+P(crash ≥ x) ≈ 0.99 / x). Winnings are minted as tUSD; `/api/crash/reveal` resolves rounds so
+players sign once. Testnet only – with real money this would be a licensed casino game.
+
 ## Custom bets (`BetEscrow`)
 
 - Both sides report the same result → settled. Reporting that the other side won settles at once.

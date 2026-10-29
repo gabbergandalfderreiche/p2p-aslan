@@ -32,12 +32,15 @@ export type Deployment = {
   matchBets?: \`0x\${string}\`;
   matchBetsPrevious?: \`0x\${string}\`;
   oracle?: \`0x\${string}\`;
+  crash?: \`0x\${string}\`;
   bondCurrency?: \`0x\${string}\`;
 };
 
 export const betEscrowAbi = ${JSON.stringify(abi("BetEscrow.sol", "BetEscrow"), null, 2)} as const;
 
 export const matchBetsAbi = ${JSON.stringify(abi("MatchBets.sol", "MatchBets"), null, 2)} as const;
+
+export const crashGameAbi = ${JSON.stringify(abi("CrashGame.sol", "CrashGame"), null, 2)} as const;
 
 export const testDollarAbi = ${JSON.stringify(abi("TestDollar.sol", "TestDollar"), null, 2)} as const;
 
