@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { BETTING_MS, GROWTH, multiplierAt, type DenState } from "@/lib/den/shared";
 import { useT } from "@/i18n/client";
-import Image from "next/image";
 
 /** Where the round stands at `now`, from the polled state. Pure: the animation never decides anything. */
 export function liveOf(game: DenState | null, now: number, offset: number) {
@@ -58,21 +57,37 @@ const GREEN = "#3ddc84";
 const RED = "#ff5a4e";
 const VW = 400;
 const VH = 220;
-// The lion picture (449 × 280) has its own golden ground line; its right end, where the curve tip sits,
-// is at ANCHOR and the line climbs at TILT degrees, which the slope rotation compensates.
-const ANCHOR_X = 92;
-const ANCHOR_Y = 61;
-const TILT = 13.8;
+// Sprite sheets, frames side by side. Run and rage share the frame size and the anchor: the front
+// paws, which sit on the curve tip, are at ANCHOR of a frame. The fiery fall is centred in its frames.
+const SHEETS = {
+  run: { src: "/den-lion-run.png", frames: 8, w: 271, h: 180 },
+  rage: { src: "/den-lion-rage.png", frames: 6, w: 271, h: 180 },
+  fall: { src: "/den-lion-crash.png", frames: 3, w: 271, h: 220 },
+} as const;
+type Sheet = keyof typeof SHEETS;
+const ANCHOR_X = 80;
+const ANCHOR_Y = 95;
+const RAGE_AT = 1000; // from 10.00x the lion catches fire
 
-function Lion({ width, className }: { width: number; className: string }) {
+function Lion({ sheet, width, frame, className = "" }: { sheet: Sheet; width: number; frame: number; className?: string }) {
+  const s = SHEETS[sheet];
   return (
-    <Image src="/den-lion.png" alt="" width={449} height={280} priority className={className} style={{ width, height: "auto" }} draggable={false} />
+    <div
+      className={className}
+      style={{
+        width,
+        height: (width * s.h) / s.w,
+        backgroundImage: `url(${s.src})`,
+        backgroundSize: `${s.frames * 100}% 100%`,
+        backgroundPosition: `${(frame / (s.frames - 1)) * 100}% 0`,
+      }}
+    />
   );
 }
 
 /**
- * The game field: countdown between rounds, the climbing curve with the lion running on its tip, and
- * a red crash where the lion tumbles out of the picture.
+ * The game field: countdown between rounds, the climbing curve with the lion running on its tip (it
+ * grows with the multiplier and catches fire from 10x), and a red crash where it tumbles out.
  */
 export function LiveGraph({
   game,
@@ -113,24 +128,38 @@ export function LiveGraph({
   const dx = ((x(seconds) - x(Math.max(seconds - ds, 0))) / VW) * size.w;
   const dy = ((y(mAt(seconds)) - y(mAt(Math.max(seconds - ds, 0)))) / VH) * size.h;
   const angle = flying || crashed ? Math.max(-30, Math.min(0, (Math.atan2(dy, dx || 1) * 180) / Math.PI)) : 0;
-  const lionWidth = Math.max(130, Math.min(300, size.w * 0.3));
+  const m = live.multiplier / 100;
+  // The lion starts small and grows with the multiplier: full size at 10x, a little more beyond.
+  const growth = Math.max(0.55, Math.min(1.25, 0.55 + 0.45 * Math.log10(m)));
+  const baseWidth = Math.max(130, Math.min(280, size.w * 0.28));
+  const lionWidth = baseWidth * (flying || crashed ? growth : 0.55);
+  const rage = live.multiplier >= RAGE_AT && (flying || crashed);
+  // Gallop gets faster as it climbs; the frame comes from the shared clock, so it never drifts.
+  const frameMs = Math.max(40, 95 - 14 * Math.log2(m));
+  const sheet: Sheet = crashed && rage ? "fall" : rage ? "rage" : "run";
+  // The fall frames play once by CSS from the moment the crash shows up; the runner freezes mid-stride.
+  const frame = flying ? Math.floor(now / frameMs) % SHEETS[sheet].frames : crashed && rage ? 0 : 3;
   const tipLeft = (tip[0] / VW) * 100;
   const tipTop = (tip[1] / VH) * 100;
 
   // Sparks left behind on the curve: fixed positions just behind the tip, flickering with time.
   const sparks =
     flying && seconds > 0.4
-      ? Array.from({ length: 9 }, (_, i) => {
-          const s = seconds - 0.18 * (i + 1) - ((now / 90 + i * 37) % 10) * 0.004;
+      ? Array.from({ length: rage ? 16 : 9 }, (_, i) => {
+          const s = seconds - (rage ? 0.12 : 0.18) * (i + 1) - ((now / 90 + i * 37) % 10) * 0.004;
           if (s <= 0) return null;
-          return { left: (x(s) / VW) * 100, top: (y(mAt(s)) / VH) * 100, o: 0.9 - i * 0.09, r: 2 + ((i * 7 + Math.floor(now / 120)) % 3) };
+          const r = (rage ? 3 : 2) + ((i * 7 + Math.floor(now / 120)) % 3);
+          return { left: (x(s) / VW) * 100, top: (y(mAt(s)) / VH) * 100, o: Math.max(0.15, 0.9 - i * (rage ? 0.05 : 0.09)), r };
         }).filter((p) => p !== null)
       : [];
 
   const gridY = [1, 2, 5, 10, 25, 50, 100, 250, 500, 1000].filter((v) => v < maxY);
 
   return (
-    <div ref={box} className={`den-field relative h-[17rem] overflow-hidden rounded-[22px] text-white sm:h-[30rem] ${crashed ? "den-shake" : ""}`}>
+    <div
+      ref={box}
+      className={`den-field relative h-[17rem] overflow-hidden rounded-[22px] text-white sm:h-[30rem] ${crashed ? "den-shake" : ""} ${rage && flying ? "den-rage" : ""}`}
+    >
       <svg className="absolute inset-0 h-full w-full" viewBox={`0 0 ${VW} ${VH}`} preserveAspectRatio="none" aria-hidden>
         <defs>
           <filter id="curve-glow" x="-20%" y="-20%" width="140%" height="140%">
@@ -158,7 +187,16 @@ export function LiveGraph({
         <span
           key={i}
           className="pointer-events-none absolute rounded-full"
-          style={{ left: `${p.left}%`, top: `${p.top}%`, width: p.r * 2, height: p.r * 2, background: colour, opacity: p.o, boxShadow: `0 0 8px ${colour}`, transform: "translate(-50%, -50%)" }}
+          style={{
+            left: `${p.left}%`,
+            top: `${p.top}%`,
+            width: p.r * 2,
+            height: p.r * 2,
+            background: rage ? (i % 2 ? "#ff7a1a" : "#ffd36b") : colour,
+            opacity: p.o,
+            boxShadow: `0 0 ${rage ? 14 : 8}px ${rage ? "#ff5a1a" : colour}`,
+            transform: "translate(-50%, -50%)",
+          }}
           aria-hidden
         />
       ))}
@@ -171,12 +209,21 @@ export function LiveGraph({
           style={{
             left: `${tipLeft}%`,
             top: `${tipTop}%`,
-            transform: `translate(-${ANCHOR_X}%, -${ANCHOR_Y}%) rotate(${angle + TILT}deg)`,
+            transform: `translate(-${ANCHOR_X}%, -${ANCHOR_Y}%) rotate(${angle}deg)`,
             transformOrigin: `${ANCHOR_X}% ${ANCHOR_Y}%`,
           }}
         >
-          <div className={crashed ? "lion-tumble" : ""}>
-            <Lion width={lionWidth} className={flying ? "lion-run" : ""} />
+          {flying && (
+            <div className={`lion-streaks ${rage ? "lion-streaks-rage" : ""}`} aria-hidden>
+              <span style={{ top: "30%" }} />
+              <span style={{ top: "52%", animationDelay: "0.1s" }} />
+              <span style={{ top: "72%", animationDelay: "0.2s" }} />
+            </div>
+          )}
+          {rage && flying && <div className="lion-aura" aria-hidden />}
+          {/* Below 10x the frozen runner tumbles; on fire, the fall frames do the tumbling and it only drops. */}
+          <div className={crashed ? (rage ? "lion-drop" : "lion-tumble") : rage ? "lion-rage" : ""}>
+            <Lion sheet={sheet} width={lionWidth} frame={frame} className={sheet === "fall" ? "lion-fall-frames" : ""} />
           </div>
         </div>
       )}
@@ -187,7 +234,7 @@ export function LiveGraph({
       )}
       {live.phase === "betting" && (
         <div className="pointer-events-none absolute bottom-[3%] left-[3%]" aria-hidden>
-          <Lion width={lionWidth * 0.8} className="lion-idle" />
+          <Lion sheet="run" width={lionWidth} frame={frame} className="lion-idle" />
         </div>
       )}
       {crashed && <div key={`flash-${game?.round}`} className="den-flash pointer-events-none absolute inset-0" aria-hidden />}

@@ -227,21 +227,97 @@ body {
   box-shadow: 0 4px 0 #b77708, 0 0 28px rgba(245, 181, 58, 0.35);
 }
 
-/* Lion image on the curve: a light gallop while running, slow breathing while waiting. */
+/* Lion on the curve: run, rage and fall come from sprite frames; these add speed lines, the 10x rage
+   (fiery aura, shaking, red glow on the field), slow breathing while waiting and the crash motion. */
+.lion-streaks {
+  position: absolute;
+  right: 72%;
+  top: 0;
+  width: 110%;
+  height: 100%;
+}
+.lion-streaks span {
+  position: absolute;
+  right: 0;
+  height: 3px;
+  width: 100%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, transparent, rgba(255, 200, 80, 0.85));
+}
+.lion-streaks-rage span {
+  height: 5px;
+  background: linear-gradient(90deg, transparent, rgba(255, 90, 30, 0.95));
+}
+.lion-aura {
+  position: absolute;
+  inset: -20% -10% -5% -10%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(255, 90, 30, 0.5), rgba(255, 170, 40, 0.2) 60%, transparent);
+  filter: blur(6px);
+}
+.lion-rage {
+  filter: drop-shadow(0 0 10px rgba(255, 80, 20, 0.85));
+}
+.den-rage {
+  box-shadow: inset 0 0 90px rgba(255, 60, 20, 0.45);
+}
 @media (prefers-reduced-motion: no-preference) {
-  .lion-run {
-    animation: lion-gallop 0.32s ease-in-out infinite alternate;
+  .lion-streaks span {
+    animation: lion-streak 0.4s linear infinite;
   }
-  .lion-idle {
+  .lion-streaks-rage span {
+    animation-duration: 0.22s;
+  }
+  .lion-aura {
+    animation: lion-aura 0.3s ease-in-out infinite alternate;
+  }
+  .lion-rage {
+    animation: lion-rage 0.12s linear infinite;
+  }
+  .den-rage {
+    animation: den-rage 0.9s ease-in-out infinite alternate;
+  }
+  .lion-drop {
+    animation: lion-drop 1.2s cubic-bezier(0.4, 0, 0.8, 0.6) forwards;
+  }
+  .lion-fall-frames {
+    animation: lion-fall-frames 0.5s steps(3, jump-none) forwards;
+  }
+          .lion-idle {
     animation: lion-breathe 2.4s ease-in-out infinite;
   }
   .lion-tumble {
     animation: lion-tumble 1.3s cubic-bezier(0.3, 0.1, 0.6, 1) forwards;
   }
 }
-@keyframes lion-gallop {
-  from { transform: translateY(0) rotate(0); }
-  to { transform: translateY(-5%) rotate(-2deg); }
+@keyframes lion-streak {
+  from { transform: scaleX(0.3); opacity: 0; transform-origin: right; }
+  40% { opacity: 1; }
+  to { transform: scaleX(1); opacity: 0; transform-origin: right; }
+}
+@keyframes lion-aura {
+  from { transform: scale(0.92); opacity: 0.7; }
+  to { transform: scale(1.08); opacity: 1; }
+}
+@keyframes lion-rage {
+  0% { transform: translate(0, 0) rotate(0); }
+  25% { transform: translate(-1.5%, 1%) rotate(-1.5deg); }
+  50% { transform: translate(1%, -1.5%) rotate(1deg); }
+  75% { transform: translate(1.5%, 0.5%) rotate(-0.5deg); }
+  100% { transform: translate(0, 0) rotate(0); }
+}
+@keyframes den-rage {
+  from { box-shadow: inset 0 0 60px rgba(255, 60, 20, 0.3); }
+  to { box-shadow: inset 0 0 120px rgba(255, 60, 20, 0.6); }
+}
+@keyframes lion-fall-frames {
+  from { background-position: 0% 0; }
+  to { background-position: 100% 0; }
+}
+@keyframes lion-drop {
+  0% { transform: translate(0, 0); opacity: 1; }
+  20% { transform: translate(6%, -20%); opacity: 1; }
+  100% { transform: translate(25%, 170%); opacity: 0; }
 }
 @keyframes lion-breathe {
   0%, 100% { transform: translateY(0) scale(1); }
