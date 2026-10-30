@@ -37,8 +37,9 @@ export default async function Home() {
                 </Link>
               </div>
             </div>
-            <div className="mx-auto">
-              <EggLion size={260} animated title={t.brand.mascot} />
+            {/* Dark backdrop like the P2P Bet card on hamstr.online; the drawing was cut from a dark scene. */}
+            <div className="mx-auto rounded-3xl border-2 border-[#f5b53a]/60 bg-[#17121d] px-6 py-8 shadow-[0_0_40px_rgba(245,181,58,0.2)]">
+              <EggLion golden size={340} title={t.brand.mascot} />
             </div>
           </div>
         </section>
