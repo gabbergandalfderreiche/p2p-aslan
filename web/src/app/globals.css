@@ -329,7 +329,7 @@ body {
   100% { transform: translate(40%, 160%) rotate(160deg); opacity: 0; }
 }
 
-/* Funny lion (home hero, corner): bobs gently, wiggles on hover. */
+/* Funny lion link to Löwensprung: bobs gently, wiggles on hover. */
 @media (prefers-reduced-motion: no-preference) {
   .lion-bounce {
     animation: corner-bob 2.6s ease-in-out infinite;

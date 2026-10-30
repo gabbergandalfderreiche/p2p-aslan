@@ -5,6 +5,7 @@ import { getDictionary } from "@/i18n/server";
 import { WalletCard } from "./WalletCard";
 import { NewBet } from "./NewBet";
 import { BetLists } from "./BetLists";
+import { DenLion } from "@/components/lion/DenLion";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getDictionary();
@@ -19,7 +20,10 @@ export default function AppPage() {
     <AppFrame>
       <div className="grid gap-6 lg:grid-cols-[1fr_22rem]">
         <NewBet />
-        <WalletCard />
+        <div className="space-y-6">
+          <WalletCard />
+          <DenLion className="hidden lg:flex" />
+        </div>
       </div>
       <BetLists />
     </AppFrame>

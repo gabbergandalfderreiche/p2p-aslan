@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { EggLion } from "@/components/lion/EggLion";
+import { DenLion } from "@/components/lion/DenLion";
 import { SiteHeader } from "@/components/SiteHeader";
 import { LegalFooter } from "@/components/LegalFooter";
 import { UmaInfo } from "@/components/UmaInfo";
@@ -37,7 +38,7 @@ export default async function Home() {
               </div>
             </div>
             <div className="mx-auto">
-              <EggLion funny size={260} title={t.brand.mascot} />
+              <EggLion size={260} animated title={t.brand.mascot} />
             </div>
           </div>
         </section>
@@ -86,6 +87,8 @@ export default async function Home() {
             <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted">{h.why}</p>
           </div>
         </section>
+
+        <DenLion className="mb-12" />
       </main>
 
       <LegalFooter />
