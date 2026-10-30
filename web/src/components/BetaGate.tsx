@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import Link from "next/link";
-import { Lion } from "./lion/Lion";
+import { LionHead } from "./lion/LionHead";
 import { BRAND } from "@/lib/brand";
 import { LEGAL } from "@/lib/legal";
 import { useT } from "@/i18n/client";
@@ -74,7 +74,7 @@ export function BetaGate({ children }: { children: ReactNode }) {
             className="card max-h-[90vh] w-full max-w-lg overflow-y-auto p-6"
           >
             <div className="flex items-center gap-3">
-              <Lion size={60} animated />
+              <LionHead size={60} />
               <div>
                 <span className="rounded-full bg-soft/40 px-2 py-0.5 text-[11px] font-bold">{t.beta.tag}</span>
                 <h2 id="beta-title" className="font-display mt-1 text-2xl font-extrabold">

@@ -348,6 +348,95 @@ body {
   75% { transform: rotate(6deg) scale(1.08); }
 }
 
+/* Deposit celebration in Löwensprung: coin burst, money rain, big "+amount", flash and shake. */
+.money-coin {
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff3b0, #f5b53a 45%, #b9770e 100%);
+  box-shadow: inset 0 0 0 3px rgba(150, 90, 10, 0.55), 0 0 12px rgba(255, 200, 80, 0.7);
+}
+.money-bill {
+  position: absolute;
+  width: 54px;
+  height: 28px;
+  border-radius: 4px;
+  background: linear-gradient(135deg, #3ddc84, #1f9d5a);
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.45), 0 4px 10px rgba(0, 0, 0, 0.3);
+  color: #0b4d2a;
+  font: 800 10px/28px var(--font-display), sans-serif;
+  text-align: center;
+}
+.money-spray {
+  left: 50%;
+  top: 50%;
+  margin: -13px 0 0 -13px;
+}
+.money-fall {
+  top: -40px;
+}
+.money-pop {
+  text-shadow: 0 0 24px rgba(255, 190, 60, 0.9), 0 0 60px rgba(255, 140, 20, 0.6), 0 4px 0 #8a4f00;
+}
+.money-flash {
+  background: radial-gradient(circle, rgba(255, 220, 120, 0.75), rgba(255, 180, 40, 0.25) 45%, transparent 75%);
+  opacity: 0;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .money-stage {
+    animation: money-shake 0.5s 0.05s linear;
+  }
+  .money-flash {
+    animation: money-flash 0.9s ease-out;
+  }
+  .money-spray {
+    animation: money-spray 1.1s cubic-bezier(0.15, 0.7, 0.3, 1) forwards;
+  }
+  .money-fall {
+    animation-name: money-fall;
+    animation-timing-function: cubic-bezier(0.3, 0.2, 0.6, 1);
+    animation-fill-mode: both;
+  }
+  .money-pop {
+    animation: money-pop 3.2s cubic-bezier(0.2, 1.6, 0.4, 1) forwards;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .money-spray,
+  .money-fall {
+    display: none;
+  }
+}
+@keyframes money-shake {
+  0%, 100% { transform: translate(0, 0); }
+  20% { transform: translate(-8px, 4px); }
+  40% { transform: translate(7px, -5px); }
+  60% { transform: translate(-5px, 3px); }
+  80% { transform: translate(4px, -2px); }
+}
+@keyframes money-flash {
+  0% { opacity: 0; }
+  15% { opacity: 1; }
+  100% { opacity: 0; }
+}
+@keyframes money-spray {
+  0% { transform: translate(0, 0) scale(0.3); opacity: 1; }
+  70% { opacity: 1; }
+  100% { transform: translate(var(--dx), var(--dy)) scale(1.1) rotate(540deg); opacity: 0; }
+}
+@keyframes money-fall {
+  0% { transform: translate(0, 0) rotate(0) rotateY(0) scale(var(--scale)); opacity: 1; }
+  50% { transform: translate(calc(var(--drift) * -0.6), 55vh) rotate(calc(var(--spin) * 0.5)) rotateY(180deg) scale(var(--scale)); }
+  100% { transform: translate(var(--drift), 110vh) rotate(var(--spin)) rotateY(360deg) scale(var(--scale)); opacity: 0.9; }
+}
+@keyframes money-pop {
+  0% { transform: scale(0.2); opacity: 0; }
+  12% { transform: scale(1.15); opacity: 1; }
+  20%, 80% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(1.05) translateY(-20px); opacity: 0; }
+}
+
 /* Night sky behind the crash game. */
 .den-sky {
   background:

@@ -1,15 +1,14 @@
 "use client";
 
-import type { ComponentProps } from "react";
 import { useRouter } from "next/navigation";
-import { Lion } from "./Lion";
+import { LionHead } from "./LionHead";
 import { useT } from "@/i18n/client";
 
 /**
- * The lion with a secret: a double-click (double-tap) opens the Löwensprung page. `golden` shows the
- * drawn golden lion (the one on hamstr.online) instead of the logo lion.
+ * The lion with a secret: a double-click (double-tap) opens the Löwensprung page. By default the
+ * lion's head; `full` shows the whole golden lion leaping.
  */
-export function EggLion({ golden = false, ...props }: ComponentProps<typeof Lion> & { golden?: boolean }) {
+export function EggLion({ size = 48, title = "", full = false }: { size?: number; title?: string; full?: boolean }) {
   const router = useRouter();
   const { path } = useT();
   return (
@@ -20,11 +19,11 @@ export function EggLion({ golden = false, ...props }: ComponentProps<typeof Lion
       }}
       className="inline-block select-none"
     >
-      {golden ? (
+      {full ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src="/lion-leap.png" alt={props.title ?? ""} style={{ width: props.size }} className="h-auto" draggable={false} />
+        <img src="/lion-leap.png" alt={title} style={{ width: size }} className="h-auto" draggable={false} />
       ) : (
-        <Lion {...props} />
+        <LionHead size={size} title={title} />
       )}
     </span>
   );

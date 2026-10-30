@@ -13,6 +13,7 @@ import { useSend } from "@/lib/useSend";
 import { useStarterKit } from "@/lib/useStarterKit";
 import { useT } from "@/i18n/client";
 import { LiveGraph, liveOf } from "./LiveGraph";
+import { MoneyRain } from "./MoneyRain";
 import { useDen, useFrameClock } from "./useDen";
 
 /** Only the house owner (Oli's wallet, the timelock admin) tops up the pot; players never see that button. */
@@ -42,6 +43,7 @@ export function LionDen() {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ ok: boolean; text: string; tx?: string } | null>(null);
   const [moveAmount, setMoveAmount] = useState("50");
+  const [rain, setRain] = useState({ n: 0, amount: "" });
   const [house, setHouse] = useState<{ house: Address | null; pot: number; persistent: boolean } | null>(null);
 
   const me = address?.toLowerCase();
@@ -129,6 +131,7 @@ export function LionDen() {
       try {
         await den.deposit(hash);
         setMessage({ ok: true, text: g.deposited(fmtUsd(value)), tx: hash });
+        setRain((r) => ({ n: r.n + 1, amount: fmtUsd(value) }));
       } catch (e) {
         setMessage({ ok: false, text: errorText(e) });
       }
@@ -219,6 +222,7 @@ export function LionDen() {
 
   return (
     <div className="den-dark space-y-6 rounded-[28px] p-3 sm:p-6">
+      <MoneyRain trigger={rain.n} amount={rain.amount} />
       <header className="flex flex-wrap items-center gap-3">
         <Crown />
         <h1 className="font-display text-4xl font-extrabold sm:text-5xl">{g.title}</h1>

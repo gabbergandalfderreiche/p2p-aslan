@@ -7,8 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "sync-contracts": "node scripts/sync-contracts.mjs",
-    "build-icons": "node scripts/build-icons.mjs"
+    "sync-contracts": "node scripts/sync-contracts.mjs"
   },
   "dependencies": {
     "@base-org/account": "^2.5.13",
