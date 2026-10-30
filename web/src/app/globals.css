@@ -329,6 +329,25 @@ body {
   100% { transform: translate(40%, 160%) rotate(160deg); opacity: 0; }
 }
 
+/* Funny lion (home hero, corner): bobs gently, wiggles on hover. */
+@media (prefers-reduced-motion: no-preference) {
+  .lion-bounce {
+    animation: corner-bob 2.6s ease-in-out infinite;
+  }
+  .lion-bounce:hover {
+    animation: corner-wiggle 0.4s ease-in-out infinite;
+  }
+}
+@keyframes corner-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+@keyframes corner-wiggle {
+  0%, 100% { transform: rotate(0) scale(1.08); }
+  25% { transform: rotate(-6deg) scale(1.08); }
+  75% { transform: rotate(6deg) scale(1.08); }
+}
+
 /* Night sky behind the crash game. */
 .den-sky {
   background:

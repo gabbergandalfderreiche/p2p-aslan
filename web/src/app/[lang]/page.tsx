@@ -37,7 +37,7 @@ export default async function Home() {
               </div>
             </div>
             <div className="mx-auto">
-              <EggLion size={260} animated title={t.brand.mascot} />
+              <EggLion funny size={260} title={t.brand.mascot} />
             </div>
           </div>
         </section>
