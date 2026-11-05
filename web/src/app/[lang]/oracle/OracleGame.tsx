@@ -53,6 +53,7 @@ export function OracleGame() {
   const [free, setFree] = useState<{ i: number; n: number; hype: number; won: number } | null>(null);
   const [result, setResult] = useState<{ text: string; good: boolean } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [errorDetail, setErrorDetail] = useState<string | null>(null);
   const [commit, setCommit] = useState<string | null>(null);
   const [last, setLast] = useState<{ seed: string; commit: string; pay: number } | null>(null);
   const [check, setCheck] = useState<boolean | null>(null);
@@ -185,11 +186,16 @@ export function OracleGame() {
   async function enter() {
     setBusy(true);
     setError(null);
+    setErrorDetail(null);
     try {
       await login();
     } catch (e) {
-      const msg = e instanceof Error ? e.message : "";
-      setError(/reject|denied|cancel/i.test(msg) ? o.signCancelled : (t.den.errors[msg] ?? t.app.failed));
+      const msg = e instanceof Error ? e.message : String(e);
+      console.error("oracle login", e);
+      const known = /reject|denied|cancel/i.test(msg) ? o.signCancelled : t.den.errors[msg];
+      setError(known ?? t.app.failed);
+      // Unknown failure: show the raw reason so it can be reported.
+      if (!known) setErrorDetail(msg.split("\n")[0].slice(0, 160));
     } finally {
       setBusy(false);
     }
@@ -335,6 +341,7 @@ export function OracleGame() {
             </button>
           )}
           {error && <p className="text-sm font-semibold text-bad">{error}</p>}
+          {errorDetail && <p className="break-words text-xs text-muted">{errorDetail}</p>}
           {!loggedIn && <p className="text-xs text-muted">{o.loginHint}</p>}
           {loggedIn && (me?.balance ?? 0) < stake && !busy && (
             <Link href={path("/lion-den")} className="block text-sm font-semibold text-[#ffd36b] underline">

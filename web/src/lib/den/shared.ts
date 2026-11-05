@@ -54,6 +54,9 @@ export type DenState = {
   history: { round: number; crash: number }[];
 };
 
-/** Text the wallet signs to log in; the nonce makes every signature single-use. */
+/**
+ * Text the wallet signs to log in to the game account (Löwensprung and the Orakel); the nonce makes
+ * every signature single-use. ASCII only, so no wallet can encode it differently from the server.
+ */
 export const loginMessage = (address: string, nonce: string) =>
-  `Löwensprung login\n\nAddress: ${address}\nNonce: ${nonce}\n\nOnly play money (tUSD). Signing costs nothing.`;
+  `P2P Bet - game account login\n\nAddress: ${address}\nNonce: ${nonce}\n\nOnly play money (tUSD). Signing costs nothing.`;
