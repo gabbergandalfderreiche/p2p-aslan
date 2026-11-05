@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
+import Link from "next/link";
 import { erc20Abi, type Address } from "viem";
 import { useConnection } from "wagmi";
 import { useConnectModal } from "@/components/ConnectModal";
@@ -24,7 +25,7 @@ const x = (h: number) => (h / 100).toFixed(2);
 
 /** Hidden play-money crash game with a game account: deposit once, play without transactions, withdraw. */
 export function LionDen() {
-  const { t } = useT();
+  const { t, path } = useT();
   const g = t.den;
   const { address } = useConnection();
   const { open } = useConnectModal();
@@ -227,6 +228,12 @@ export function LionDen() {
         <Crown />
         <h1 className="font-display text-4xl font-extrabold sm:text-5xl">{g.title}</h1>
         <span className="rounded-full bg-accent-2 px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wide text-white">{g.secret}</span>
+        {/* The oracle owl perched next to the lion's game: leads to the book slot. */}
+        <Link href={path("/oracle")} title={t.oracle.title} className="group ml-auto flex items-center gap-2">
+          <span className="hidden text-xs font-bold text-muted group-hover:text-ink sm:inline">{t.oracle.title} →</span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/owl-funny.png" alt={t.oracle.title} className="lion-bounce h-14 w-auto sm:h-16" draggable={false} />
+        </Link>
         <p className="w-full max-w-2xl text-sm text-muted">{g.lead}</p>
       </header>
 

@@ -58,6 +58,9 @@ const K = {
   nonce: (n: string) => `den:nonce:${n}`,
 };
 
+/** Store key of a player's game-account balance, shared with the Orakel slot. */
+export const balanceKey = (player: string) => K.balance(player);
+
 const crashOf = (id: number) => crashFromSeed(seedOf(id));
 const endOf = (r: Round) => r.startAt + timeline(crashOf(r.id)).end;
 

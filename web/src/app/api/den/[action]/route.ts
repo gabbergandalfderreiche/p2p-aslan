@@ -2,8 +2,12 @@ import { getAddress, isAddress, isHex, type Address } from "viem";
 import { account, cashOut, consumeNonce, deposit, DenError, houseAddress, issueNonce, placeBet, pot, publicClient, state, withdraw } from "@/lib/den/game";
 import { endSession, loginMessage, newNonce, sessionAddress, startSession } from "@/lib/den/session";
 import { persistent } from "@/lib/den/store";
+import { commit as oracleCommit, spin as oracleSpin, stats as oracleStats } from "@/lib/oracle/server";
 
-/** Löwensprung API: /api/den/<action>. Everything that touches a balance needs the login cookie. */
+/**
+ * Löwensprung API: /api/den/<action>, also for the Orakel slot (oracle-*), which plays on the same
+ * game account. Everything that touches a balance needs the login cookie.
+ */
 
 const json = (data: unknown, status = 200) => Response.json(data, { status, headers: { "Cache-Control": "no-store" } });
 
@@ -46,6 +50,10 @@ export async function GET(_request: Request, { params }: { params: Promise<{ act
         }
         return json({ house, pot: house ? await pot() : 0, persistent });
       }
+      case "oracle": {
+        const a = await player();
+        return json({ ...(await oracleCommit(a)), stats: await oracleStats(a) });
+      }
       default:
         return json({ error: "unknown" }, 404);
     }
@@ -81,6 +89,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ act
         const { hash } = await body<{ hash: string }>(request);
         if (!hash || !isHex(hash) || hash.length !== 66) return json({ error: "bad-hash" }, 400);
         return json(await deposit(await player(), hash));
+      }
+      case "oracle-spin": {
+        const { stake } = await body<{ stake: number }>(request);
+        return json(await oracleSpin(await player(), Number(stake)));
       }
       case "withdraw": {
         const { amount } = await body<{ amount: number }>(request);

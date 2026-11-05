@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { EggLion } from "@/components/lion/EggLion";
 import { DenLion } from "@/components/lion/DenLion";
+import { OracleOwl } from "@/components/OracleOwl";
 import { SiteHeader } from "@/components/SiteHeader";
 import { LegalFooter } from "@/components/LegalFooter";
 import { UmaInfo } from "@/components/UmaInfo";
@@ -89,7 +90,11 @@ export default async function Home() {
           </div>
         </section>
 
-        <DenLion className="mb-12" />
+        {/* The lion and, next to it, the oracle owl: each leads to its own game. */}
+        <div className="mb-12 flex items-end justify-center gap-10">
+          <DenLion className="!mx-0" />
+          <OracleOwl />
+        </div>
       </main>
 
       <LegalFooter />

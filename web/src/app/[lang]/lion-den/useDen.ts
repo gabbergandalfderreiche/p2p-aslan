@@ -11,7 +11,7 @@ export type Account = {
   history: { round: number; stake: number; cashout: number | null; crash: number; profit: number }[];
 };
 
-async function api<T>(path: string, body?: unknown): Promise<T> {
+export async function denApi<T>(path: string, body?: unknown): Promise<T> {
   const res = await fetch(`/api/den/${path}`, {
     method: body === undefined ? "GET" : "POST",
     headers: body === undefined ? undefined : { "Content-Type": "application/json" },
@@ -31,22 +31,45 @@ function subscribeFrame(cb: () => void) {
 const frameNow = () => Math.floor(Date.now() / 50) * 50;
 export const useFrameClock = () => useSyncExternalStore(subscribeFrame, frameNow, () => 0);
 
-/** Live round state (polled), the player's game account and the actions on it. */
-export function useDen() {
+/** The game account shared by Löwensprung and the Orakel: login by signature, balance, stats. */
+export function useDenAccount() {
   const { address } = useConnection();
   const { signMessageAsync } = useSignMessage();
-  const [game, setGame] = useState<DenState | null>(null);
-  const [offset, setOffset] = useState(0); // server clock minus local clock
   const [me, setMe] = useState<Account | null>(null);
-  const lastRound = useRef(0);
 
   const refreshMe = useCallback(async () => {
     try {
-      setMe(await api<Account>("me"));
+      setMe(await denApi<Account>("me"));
     } catch {
       setMe(null);
     }
   }, []);
+
+  // Re-read the account when the wallet changes (log in / switch / log out).
+  useEffect(() => {
+    const id = setTimeout(() => void refreshMe(), 0);
+    return () => clearTimeout(id);
+  }, [address, refreshMe]);
+
+  const loggedIn = Boolean(me?.address && address && me.address.toLowerCase() === address.toLowerCase());
+
+  async function login() {
+    if (!address) return;
+    const { nonce } = await denApi<{ nonce: string }>("nonce");
+    const signature = await signMessageAsync({ message: loginMessage(address, nonce) });
+    await denApi("login", { address, signature, nonce });
+    await refreshMe();
+  }
+
+  return { address, me, setMe, loggedIn, login, refreshMe };
+}
+
+/** Live round state (polled), the player's game account and the actions on it. */
+export function useDen() {
+  const { me, loggedIn, login, refreshMe } = useDenAccount();
+  const [game, setGame] = useState<DenState | null>(null);
+  const [offset, setOffset] = useState(0); // server clock minus local clock
+  const lastRound = useRef(0);
 
   useEffect(() => {
     let stop = false;
@@ -54,7 +77,7 @@ export function useDen() {
     const poll = async () => {
       try {
         const sent = Date.now();
-        const s = await api<DenState>("state");
+        const s = await denApi<DenState>("state");
         const received = Date.now();
         setOffset(s.serverNow - (sent + received) / 2);
         setGame(s);
@@ -76,24 +99,8 @@ export function useDen() {
     };
   }, [refreshMe]);
 
-  // Re-read the account when the wallet changes (log in / switch / log out).
-  useEffect(() => {
-    const id = setTimeout(() => void refreshMe(), 0);
-    return () => clearTimeout(id);
-  }, [address, refreshMe]);
-
-  const loggedIn = Boolean(me?.address && address && me.address.toLowerCase() === address.toLowerCase());
-
-  async function login() {
-    if (!address) return;
-    const { nonce } = await api<{ nonce: string }>("nonce");
-    const signature = await signMessageAsync({ message: loginMessage(address, nonce) });
-    await api("login", { address, signature, nonce });
-    await refreshMe();
-  }
-
   const act = async <T,>(path: string, body: unknown) => {
-    const res = await api<T>(path, body);
+    const res = await denApi<T>(path, body);
     void refreshMe();
     return res;
   };
