@@ -2,23 +2,17 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
-import { erc20Abi, type Address } from "viem";
 import { useConnection } from "wagmi";
 import { useConnectModal } from "@/components/ConnectModal";
-import { StarterKit } from "@/components/StarterKit";
-import { DEPLOYMENT, fmtUsd, parseUsd, short, TOKEN_SYMBOL, useTokenBalance } from "@/lib/bets";
+import { fmtUsd, parseUsd, short, TOKEN_SYMBOL } from "@/lib/bets";
 import { crashFromSeed, MAX_AUTO, MAX_STAKE, MIN_STAKE } from "@/lib/den/shared";
 import { txUrl } from "@/lib/network";
-import { refetchSoon } from "@/lib/tx";
-import { errorText as walletErrorText, useSend } from "@/lib/useSend";
-import { useStarterKit } from "@/lib/useStarterKit";
+import { errorText as walletErrorText } from "@/lib/useSend";
 import { useT } from "@/i18n/client";
 import { LiveGraph, liveOf } from "./LiveGraph";
-import { MoneyRain } from "./MoneyRain";
+import { GameAccount } from "./GameAccount";
 import { useDen, useFrameClock } from "./useDen";
 
-/** Only the house owner (Oli's wallet, the timelock admin) tops up the pot; players never see that button. */
-const POT_OWNER = "0xbd7c9af9cd062e3f099d8442393052dd71744c01";
 const STAKES = [1, 5, 10, 25];
 const AUTOS = ["1.5", "2", "3", "10"];
 const x = (h: number) => (h / 100).toFixed(2);
@@ -32,9 +26,6 @@ export function LionDen() {
   const den = useDen();
   const now = useFrameClock();
   const live = liveOf(den.game, now, den.offset);
-  const kit = useStarterKit(address);
-  const wallet = useTokenBalance(address);
-  const send = useSend(t);
 
   const [stake, setStake] = useState("5");
   const [autoOn, setAutoOn] = useState(false);
@@ -43,9 +34,6 @@ export function LionDen() {
   const [queued, setQueued] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ ok: boolean; text: string; tx?: string } | null>(null);
-  const [moveAmount, setMoveAmount] = useState("50");
-  const [rain, setRain] = useState({ n: 0, amount: "" });
-  const [house, setHouse] = useState<{ house: Address | null; pot: number; persistent: boolean } | null>(null);
 
   const me = address?.toLowerCase();
   const myBet = den.game?.bets.find((b) => b.player.toLowerCase() === me) ?? null;
@@ -54,20 +42,11 @@ export function LionDen() {
   const stakeOk = amount >= MIN_STAKE && amount <= MAX_STAKE;
   const autoOk = autoValue === null || (autoValue >= 101 && autoValue <= MAX_AUTO);
 
+  const autoError = den.account.autoError;
   const errorText = (e: unknown) => {
     const code = e instanceof Error ? e.message : "server";
     return g.errors[code] ?? walletErrorText(e, t);
   };
-
-  const loadHouse = () =>
-    fetch("/api/den/house", { cache: "no-store" })
-      .then((r) => r.json())
-      .then(setHouse)
-      .catch(() => {});
-  useEffect(() => {
-    const id = setTimeout(loadHouse, 0);
-    return () => clearTimeout(id);
-  }, []);
 
   async function placeBet() {
     setBusy(true);
@@ -116,53 +95,6 @@ export function LionDen() {
     }
   }
 
-  /** Sends tUSD from the wallet to the house; `credit` puts it on the game account. */
-  async function moveIn(credit: boolean) {
-    if (!address || !house?.house || !DEPLOYMENT) return;
-    setMessage(null);
-    const value = parseUsd(moveAmount);
-    const to = house.house;
-    let hash = "";
-    const ok = await send.run(async (step) => {
-      hash = await step(credit ? g.depositing : g.funding, (w) =>
-        w({ address: DEPLOYMENT!.token, abi: erc20Abi, functionName: "transfer", args: [to, value] }),
-      );
-    });
-    if (ok && credit) {
-      try {
-        await den.deposit(hash);
-        setMessage({ ok: true, text: g.deposited(fmtUsd(value)), tx: hash });
-        setRain((r) => ({ n: r.n + 1, amount: fmtUsd(value) }));
-      } catch (e) {
-        setMessage({ ok: false, text: errorText(e) });
-      }
-    } else if (ok) {
-      setMessage({ ok: true, text: g.funded(fmtUsd(value)), tx: hash });
-    }
-    refetchSoon(() => {
-      wallet.refetch();
-      void loadHouse();
-    });
-  }
-
-  async function withdraw() {
-    setBusy(true);
-    setMessage(null);
-    try {
-      const value = parseUsd(moveAmount);
-      const { hash } = await den.withdraw(Number(value));
-      setMessage({ ok: true, text: g.withdrawn(fmtUsd(value)), tx: hash });
-      refetchSoon(() => {
-        wallet.refetch();
-        void loadHouse();
-      });
-    } catch (e) {
-      setMessage({ ok: false, text: errorText(e) });
-    } finally {
-      setBusy(false);
-    }
-  }
-
   const balance = den.me?.balance ?? 0;
   const stats = den.me?.stats;
   const net = stats ? stats.won - stats.wagered : 0;
@@ -180,7 +112,7 @@ export function LionDen() {
     action = (
       <button
         className="btn btn-primary w-full text-lg"
-        disabled={busy}
+        disabled={busy || den.account.signing}
         onClick={async () => {
           setBusy(true);
           try {
@@ -223,7 +155,6 @@ export function LionDen() {
 
   return (
     <div className="den-dark space-y-6 rounded-[28px] p-3 sm:p-6">
-      <MoneyRain trigger={rain.n} amount={rain.amount} />
       <header className="flex flex-wrap items-center gap-3">
         <Crown />
         <h1 className="font-display text-4xl font-extrabold sm:text-5xl">{g.title}</h1>
@@ -330,6 +261,7 @@ export function LionDen() {
         {/* On phones the button sits right under the field, on desktop below the controls. */}
         <div className="order-1 sm:order-4">
           <div className="den-action mt-3 sm:mt-5">{action}</div>
+          {!message && autoError !== null && <p className="mt-3 text-sm font-semibold text-bad">{errorText(autoError)}</p>}
           {message && (
             <p className={`mt-3 text-sm font-semibold ${message.ok ? "text-good" : "text-bad"}`}>
               {message.text}{" "}
@@ -343,51 +275,7 @@ export function LionDen() {
         </div>
       </section>
 
-      <div>
-        <aside className="den-panel grid gap-4 p-5 md:grid-cols-3">
-          <div>
-            <h2 className="font-display text-xl font-extrabold">{g.account}</h2>
-            <div className="num font-display mt-1 text-3xl font-extrabold">
-              {fmtUsd(BigInt(balance))} <span className="text-base text-muted">{TOKEN_SYMBOL}</span>
-            </div>
-            <p className="text-xs text-muted">{g.accountHint}</p>
-          </div>
-
-          {address && den.loggedIn && (
-            <div className="rounded-2xl border border-line p-3">
-              <div className="flex items-center gap-2">
-                <input className="field num" inputMode="decimal" value={moveAmount} onChange={(e) => setMoveAmount(e.target.value)} aria-label={g.amount} />
-                <span className="text-sm text-muted">{TOKEN_SYMBOL}</span>
-              </div>
-              <div className="mt-2 grid grid-cols-2 gap-2">
-                <button className="btn btn-primary !py-2 text-sm" disabled={Boolean(send.busy) || !house?.house} onClick={() => moveIn(true)}>
-                  {send.busy ?? g.deposit}
-                </button>
-                <button className="btn btn-ghost !py-2 text-sm" disabled={busy} onClick={withdraw}>
-                  {g.withdraw}
-                </button>
-              </div>
-              <p className="mt-2 text-xs text-muted">{g.walletBalance(fmtUsd(wallet.data ?? 0n))}</p>
-            </div>
-          )}
-          {address && (kit.needsGas || kit.balance === 0n) && <StarterKit kit={kit} />}
-
-          <div className="rounded-2xl bg-surface-2 p-3 text-sm">
-            <div className="flex justify-between">
-              <span className="text-muted">{g.pot}</span>
-              <span className="num font-bold">
-                {fmtUsd(BigInt(house?.pot ?? 0))} {TOKEN_SYMBOL}
-              </span>
-            </div>
-            {address?.toLowerCase() === POT_OWNER && house?.house && (
-              <button className="mt-2 text-xs font-semibold underline" disabled={Boolean(send.busy)} onClick={() => moveIn(false)}>
-                {g.fundPot(moveAmount)}
-              </button>
-            )}
-            {house && !house.persistent && <p className="mt-2 text-xs text-bad">{g.notPersistent}</p>}
-          </div>
-        </aside>
-      </div>
+      <GameAccount account={den.account} />
 
       <div className="grid gap-6 lg:grid-cols-2">
         <section className="den-panel p-5">

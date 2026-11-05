@@ -2,7 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useConnection, useSignMessage } from "wagmi";
-import { loginMessage, type DenState } from "@/lib/den/shared";
+import { createSiweMessage } from "viem/siwe";
+import { LOGIN_STATEMENT, type DenState } from "@/lib/den/shared";
+import { activeChain } from "@/lib/network";
 import { ensureChain } from "@/lib/wagmi";
 
 export type Account = {
@@ -34,9 +36,11 @@ export const useFrameClock = () => useSyncExternalStore(subscribeFrame, frameNow
 
 /** The game account shared by Löwensprung and the Orakel: login by signature, balance, stats. */
 export function useDenAccount() {
-  const { address } = useConnection();
+  const { address, status } = useConnection();
   const { signMessageAsync } = useSignMessage();
   const [me, setMe] = useState<Account | null>(null);
+  const [signing, setSigning] = useState(false);
+  const [autoError, setAutoError] = useState<unknown>(null);
 
   const refreshMe = useCallback(async () => {
     try {
@@ -56,20 +60,68 @@ export function useDenAccount() {
 
   async function login() {
     if (!address) return;
+    setSigning(true);
+    setAutoError(null);
+    try {
+      await signIn(address);
+    } finally {
+      setSigning(false);
+    }
+  }
+
+  async function signIn(address: `0x${string}`) {
     // Phantom refuses to sign while the site sits on a chain it cannot use (e.g. Base mainnet in testnet mode).
     await ensureChain();
     const { nonce } = await denApi<{ nonce: string }>("nonce");
-    const signature = await signMessageAsync({ message: loginMessage(address, nonce) });
-    await denApi("login", { address, signature, nonce });
+    const message = createSiweMessage({
+      domain: window.location.host,
+      uri: window.location.origin,
+      address,
+      statement: LOGIN_STATEMENT,
+      version: "1",
+      chainId: activeChain.id,
+      nonce,
+      issuedAt: new Date(),
+    });
+    const signature = await signMessageAsync({ message });
+    await denApi("login", { message, signature });
     await refreshMe();
   }
 
-  return { address, me, setMe, loggedIn, login, refreshMe };
+  // Connecting and signing in is one step for the player: right after they connect a wallet here
+  // (not when the page reconnects on load), ask for the signature unless a session already exists.
+  const lastStatus = useRef(status);
+  useEffect(() => {
+    const was = lastStatus.current;
+    lastStatus.current = status;
+    if (was !== "connecting" || status !== "connected" || !address) return;
+    let stop = false;
+    void (async () => {
+      const current = await denApi<Account>("me").catch(() => null);
+      if (stop) return;
+      if (current?.address?.toLowerCase() === address.toLowerCase()) {
+        setMe(current);
+        return;
+      }
+      try {
+        await login();
+      } catch (e) {
+        setAutoError(e);
+      }
+    })();
+    return () => {
+      stop = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- runs on the connect transition only
+  }, [status, address]);
+
+  return { address, me, setMe, loggedIn, login, refreshMe, signing, autoError };
 }
 
 /** Live round state (polled), the player's game account and the actions on it. */
 export function useDen() {
-  const { me, loggedIn, login, refreshMe } = useDenAccount();
+  const account = useDenAccount();
+  const { me, loggedIn, login, refreshMe } = account;
   const [game, setGame] = useState<DenState | null>(null);
   const [offset, setOffset] = useState(0); // server clock minus local clock
   const lastRound = useRef(0);
@@ -109,6 +161,7 @@ export function useDen() {
   };
 
   return {
+    account,
     game,
     offset,
     me,

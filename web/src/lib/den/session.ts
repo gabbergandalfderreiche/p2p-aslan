@@ -4,7 +4,6 @@ import { cookies } from "next/headers";
 import { getAddress, isAddress, type Address } from "viem";
 import { persistent } from "./store";
 
-export { loginMessage } from "./shared";
 
 const COOKIE = "den_session";
 const DAYS = 7;

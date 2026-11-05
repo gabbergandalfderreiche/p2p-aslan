@@ -9,6 +9,7 @@ import { errorText } from "@/lib/useSend";
 import { useT } from "@/i18n/client";
 import { denApi, useDenAccount } from "../lion-den/useDen";
 import { MoneyRain } from "../lion-den/MoneyRain";
+import { GameAccount } from "../lion-den/GameAccount";
 import { BookOpening, OwlSprite, type OwlMood } from "./OwlSprite";
 
 const START: Grid = [
@@ -40,7 +41,8 @@ export function OracleGame() {
   const { t, path } = useT();
   const o = t.oracle;
   const { open } = useConnectModal();
-  const { address, me, setMe, loggedIn, login } = useDenAccount();
+  const account = useDenAccount();
+  const { address, me, setMe, loggedIn, login, signing, autoError } = account;
 
   const [stake, setStake] = useState(1_000_000);
   const [grid, setGrid] = useState<Grid>(START);
@@ -61,6 +63,7 @@ export function OracleGame() {
   const [rain, setRain] = useState({ n: 0, amount: "" });
   const skip = useRef(false);
 
+  const shownError = error ?? (autoError ? errorText(autoError, t) : null);
   const wait = (ms: number) => (skip.current ? Promise.resolve() : sleep(ms));
 
   useEffect(() => {
@@ -210,8 +213,8 @@ export function OracleGame() {
       {t.connect.login}
     </button>
   ) : !loggedIn ? (
-    <button className="btn btn-primary w-full text-lg" disabled={busy} onClick={() => void enter()}>
-      {busy ? o.signing : o.login}
+    <button className="btn btn-primary w-full text-lg" disabled={busy || signing} onClick={() => void enter()}>
+      {busy || signing ? o.signing : o.login}
     </button>
   ) : (
     <button className="btn btn-primary w-full py-4 text-xl" disabled={busy || (me?.balance ?? 0) < stake} onClick={() => void play()}>
@@ -336,15 +339,13 @@ export function OracleGame() {
               {o.skip}
             </button>
           )}
-          {error && <p className="text-sm font-semibold text-bad">{error}</p>}
+          {shownError && <p className="text-sm font-semibold text-bad">{shownError}</p>}
           {!loggedIn && <p className="text-xs text-muted">{o.loginHint}</p>}
-          {loggedIn && (me?.balance ?? 0) < stake && !busy && (
-            <Link href={path("/lion-den")} className="block text-sm font-semibold text-[#ffd36b] underline">
-              {o.topUp} →
-            </Link>
-          )}
+          {loggedIn && (me?.balance ?? 0) < stake && !busy && <p className="text-sm font-semibold text-[#ffd36b]">{o.topUp} ↓</p>}
         </div>
       </section>
+
+      <GameAccount account={account} />
 
       <div className="grid gap-6 lg:grid-cols-2">
         <section className="den-panel p-5">

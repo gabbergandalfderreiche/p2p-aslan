@@ -1,6 +1,8 @@
 import { getAddress, isAddress, isHex, recoverMessageAddress, type Address } from "viem";
+import { parseSiweMessage } from "viem/siwe";
 import { account, cashOut, consumeNonce, deposit, DenError, houseAddress, issueNonce, placeBet, pot, publicClient, state, withdraw } from "@/lib/den/game";
-import { endSession, loginMessage, newNonce, sessionAddress, startSession } from "@/lib/den/session";
+import { endSession, newNonce, sessionAddress, startSession } from "@/lib/den/session";
+import { LOGIN_MAX_AGE_MS } from "@/lib/den/shared";
 import { persistent } from "@/lib/den/store";
 import { commit as oracleCommit, spin as oracleSpin, stats as oracleStats } from "@/lib/oracle/server";
 
@@ -67,12 +69,18 @@ export async function POST(request: Request, { params }: { params: Promise<{ act
   try {
     switch (action) {
       case "login": {
-        const { address, signature, nonce } = await body<{ address: string; signature: string; nonce: string }>(request);
-        if (!address || !isAddress(address) || !signature || !isHex(signature) || !nonce) return json({ error: "bad-login" }, 400);
-        if (!(await consumeNonce(nonce))) return json({ error: "nonce" }, 400);
+        // Sign-In with Ethereum: the signed text names this site, the wallet, our chain and a fresh nonce.
+        const { message, signature } = await body<{ message: string; signature: string }>(request);
+        if (!message || !signature || !isHex(signature)) return json({ error: "bad-login" }, 400);
+        const siwe = parseSiweMessage(message);
+        const address = siwe.address;
+        const issued = siwe.issuedAt?.getTime() ?? 0;
+        if (!address || !isAddress(address) || !siwe.nonce || siwe.domain !== request.headers.get("host") || siwe.chainId !== publicClient.chain.id)
+          return json({ error: "bad-login" }, 400);
+        if (Math.abs(Date.now() - issued) > LOGIN_MAX_AGE_MS) return json({ error: "nonce" }, 400);
+        if (!(await consumeNonce(siwe.nonce))) return json({ error: "nonce" }, 400);
         // Normal wallets (Phantom, MetaMask) are checked locally; only smart wallets such as Base Account
         // (ERC-1271 / ERC-6492) need the chain, so a slow RPC cannot block an ordinary login.
-        const message = loginMessage(address, nonce);
         const local = await recoverMessageAddress({ message, signature }).catch(() => null);
         const ok = (local !== null && local.toLowerCase() === address.toLowerCase()) || (await publicClient.verifyMessage({ address, message, signature }));
         if (!ok) return json({ error: "signature" }, 401);

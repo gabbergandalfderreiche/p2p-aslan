@@ -524,7 +524,7 @@ export const de = {
     signCancelled: "Signatur abgebrochen. Klick nochmals auf „Anmelden und spielen“ und bestätige in der Wallet.",
     loginHint: "Du spielst mit deinem Spielkonto aus dem Löwensprung – ohne Transaktion pro Spin.",
     balance: "Spielkonto",
-    topUp: "Spielkonto im Löwensprung aufladen",
+    topUp: "Zu wenig auf dem Spielkonto – lade es unten auf",
     win: (a: string) => `Gewinn ${a} tUSD`,
     noWin: "Diesmal nichts – das Orakel denkt nach.",
     line: (n: number, count: number, name: string, a: string) => `Linie ${n}: ${count}× ${name} → ${a} tUSD`,

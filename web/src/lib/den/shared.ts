@@ -55,8 +55,9 @@ export type DenState = {
 };
 
 /**
- * Text the wallet signs to log in to the game account (Löwensprung and the Orakel); the nonce makes
- * every signature single-use. ASCII only, so no wallet can encode it differently from the server.
+ * Sign-In with Ethereum (EIP-4361) message for the game account shared by Löwensprung and the
+ * Orakel. A standard login message lets wallets show it as a sign-in; the server parses it back and
+ * checks domain, nonce, address, chain and age. ASCII only.
  */
-export const loginMessage = (address: string, nonce: string) =>
-  `P2P Bet - game account login\n\nAddress: ${address}\nNonce: ${nonce}\n\nOnly play money (tUSD). Signing costs nothing.`;
+export const LOGIN_STATEMENT = "Sign in to your P2P Bet game account. Play money only (tUSD); signing costs nothing.";
+export const LOGIN_MAX_AGE_MS = 10 * 60_000;

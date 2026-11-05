@@ -525,7 +525,7 @@ export const en: Dictionary = {
     signCancelled: "Signature cancelled. Click “Sign in and play” again and confirm in your wallet.",
     loginHint: "You play with your game account from Lion Leap – no transaction per spin.",
     balance: "Game account",
-    topUp: "Top up the game account in Lion Leap",
+    topUp: "Not enough on the game account – top it up below",
     win: (a: string) => `Win ${a} tUSD`,
     noWin: "Nothing this time – the oracle is thinking.",
     line: (n: number, count: number, name: string, a: string) => `Line ${n}: ${count}× ${name} → ${a} tUSD`,
