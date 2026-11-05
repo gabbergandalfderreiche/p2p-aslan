@@ -6,17 +6,24 @@ import { readContract } from "wagmi/actions";
 import { useAttributedWrite } from "./attribution";
 import { DEPLOYMENT } from "./bets";
 import { confirm } from "./tx";
-import { wagmiConfig } from "./wagmi";
+import { ensureChain, wagmiConfig } from "./wagmi";
 import type { Dictionary } from "@/i18n";
 
 type Write = ReturnType<typeof useAttributedWrite>["mutateAsync"];
 
-/** Plain-language message for a failed wallet action. */
+/**
+ * Plain-language message for a failed wallet action. Unknown failures keep a short raw reason in
+ * brackets, so testers can report what the wallet actually said.
+ */
 export function errorText(e: unknown, t: Dictionary) {
   const msg = e instanceof Error ? e.message : String(e);
   if (/rejected|denied|cancel/i.test(msg)) return t.app.cancelled;
   if (/insufficient funds|exceeds the balance|gas required exceeds/i.test(msg)) return t.app.noGas;
-  return t.app.failed;
+  // The wallet dropped this site (e.g. after switching testnet mode) while the page still shows it connected.
+  if (/not been authorized|unauthorized|4100|not connected|disconnected|no account|ConnectorAccountNotFound/i.test(msg)) return t.app.walletLost;
+  if (/chain ?mismatch|does not match the target chain|unrecognized chain|switch.{0,20}chain|chain ?id/i.test(msg)) return t.app.wrongChain;
+  const reason = msg.split("\n")[0].slice(0, 120);
+  return reason ? `${t.app.failed} (${reason})` : t.app.failed;
 }
 
 /**
@@ -35,6 +42,7 @@ export function useSend(t: Dictionary) {
     setError(null);
     setHash(null);
     try {
+      await ensureChain();
       await action(async (label, tx) => {
         setBusy(label);
         const h = await confirm(await tx(write.mutateAsync));

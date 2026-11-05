@@ -103,6 +103,8 @@ export const en: Dictionary = {
     wrongNetwork: "Your wallet is on the wrong network.",
     switchTo: (name: string) => `Switch to ${name}`,
     loginFirst: "Sign in to bet.",
+    walletLost: "The connection to your wallet expired. Disconnect the wallet at the top right and connect it again.",
+    wrongChain: "Your wallet is on the wrong network. Switch your wallet to “Base Sepolia” and try again.",
     cancelled: "Cancelled.",
     failed: "That didn't work. Please try again.",
     noGas: "You need test ETH for the network fee. Tap “Get free test ETH” under “Your play money”.",

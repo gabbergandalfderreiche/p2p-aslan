@@ -101,6 +101,8 @@ export const de = {
     wrongNetwork: "Deine Wallet ist im falschen Netzwerk.",
     switchTo: (name: string) => `Zu ${name} wechseln`,
     loginFirst: "Melde dich an, um zu wetten.",
+    walletLost: "Die Verbindung zur Wallet ist abgelaufen. Trenne die Wallet oben rechts und verbinde sie neu.",
+    wrongChain: "Deine Wallet ist im falschen Netzwerk. Wechsle in der Wallet auf „Base Sepolia“ und versuch es nochmal.",
     cancelled: "Abgebrochen.",
     failed: "Das hat nicht geklappt. Bitte versuch es nochmal.",
     noGas: "Dir fehlt Test-ETH für die Netzwerkgebühr. Tippe bei „Dein Spielgeld“ auf „Test-ETH gratis erhalten“.",

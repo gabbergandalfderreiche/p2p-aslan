@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useConnection, useSignMessage } from "wagmi";
 import { loginMessage, type DenState } from "@/lib/den/shared";
+import { ensureChain } from "@/lib/wagmi";
 
 export type Account = {
   address: string | null;
@@ -55,6 +56,8 @@ export function useDenAccount() {
 
   async function login() {
     if (!address) return;
+    // Phantom refuses to sign while the site sits on a chain it cannot use (e.g. Base mainnet in testnet mode).
+    await ensureChain();
     const { nonce } = await denApi<{ nonce: string }>("nonce");
     const signature = await signMessageAsync({ message: loginMessage(address, nonce) });
     await denApi("login", { address, signature, nonce });

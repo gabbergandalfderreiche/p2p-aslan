@@ -1,4 +1,5 @@
 import { createConfig, http } from "wagmi";
+import { getConnection, switchChain } from "wagmi/actions";
 import { baseAccount } from "wagmi/connectors/baseAccount";
 import { injected } from "wagmi/connectors/injected";
 import { mock } from "wagmi/connectors/mock";
@@ -54,4 +55,15 @@ declare module "wagmi" {
   interface Register {
     config: typeof wagmiConfig;
   }
+}
+
+/**
+ * Puts the wallet on our network before it signs or sends anything. Wallets keep a site on the last
+ * chain they used (e.g. Base mainnet), and Phantom in testnet mode then refuses every request with
+ * an internal error; switching first (adding the chain if the wallet lacks it) avoids that.
+ */
+export async function ensureChain() {
+  const { chainId, status } = getConnection(wagmiConfig);
+  if (status !== "connected" || chainId === activeChain.id) return;
+  await switchChain(wagmiConfig, { chainId: activeChain.id });
 }

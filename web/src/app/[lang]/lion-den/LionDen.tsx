@@ -10,7 +10,7 @@ import { DEPLOYMENT, fmtUsd, parseUsd, short, TOKEN_SYMBOL, useTokenBalance } fr
 import { crashFromSeed, MAX_AUTO, MAX_STAKE, MIN_STAKE } from "@/lib/den/shared";
 import { txUrl } from "@/lib/network";
 import { refetchSoon } from "@/lib/tx";
-import { useSend } from "@/lib/useSend";
+import { errorText as walletErrorText, useSend } from "@/lib/useSend";
 import { useStarterKit } from "@/lib/useStarterKit";
 import { useT } from "@/i18n/client";
 import { LiveGraph, liveOf } from "./LiveGraph";
@@ -56,7 +56,7 @@ export function LionDen() {
 
   const errorText = (e: unknown) => {
     const code = e instanceof Error ? e.message : "server";
-    return g.errors[code] ?? t.app.failed;
+    return g.errors[code] ?? walletErrorText(e, t);
   };
 
   const loadHouse = () =>
