@@ -75,8 +75,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ act
         const siwe = parseSiweMessage(message);
         const address = siwe.address;
         const issued = siwe.issuedAt?.getTime() ?? 0;
-        if (!address || !isAddress(address) || !siwe.nonce || siwe.domain !== request.headers.get("host") || siwe.chainId !== publicClient.chain.id)
-          return json({ error: "bad-login" }, 400);
+        // Behind Vercel's proxy the site's own name arrives as x-forwarded-host; accept any name this request came in under.
+        const hosts = [request.headers.get("x-forwarded-host"), request.headers.get("host"), new URL(request.url).host].filter(Boolean);
+        const reason = !address || !isAddress(address) || !siwe.nonce ? "format" : !hosts.includes(siwe.domain ?? "") ? "domain" : siwe.chainId !== publicClient.chain.id ? "chain" : null;
+        if (reason || !address || !siwe.nonce) return json({ error: "bad-login", reason }, 400);
         if (Math.abs(Date.now() - issued) > LOGIN_MAX_AGE_MS) return json({ error: "nonce" }, 400);
         if (!(await consumeNonce(siwe.nonce))) return json({ error: "nonce" }, 400);
         // Normal wallets (Phantom, MetaMask) are checked locally; only smart wallets such as Base Account
