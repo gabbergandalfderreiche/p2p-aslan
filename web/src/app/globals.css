@@ -519,6 +519,79 @@ body {
   to { transform: scale(1.12) rotate(4deg); filter: drop-shadow(0 0 22px rgba(255, 120, 20, 1)); }
 }
 
+/* Oracle owl and whitepaper sprites. Frame n of N sits at background-position n / (N - 1). */
+.owl-sprite {
+  background-repeat: no-repeat;
+  background-position: 0% 0;
+}
+.book-open {
+  background: url(/whitepaper-open.webp) 100% 0 / 600% 100% no-repeat;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .owl-arrive {
+    animation: owl-arrive 0.9s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+  }
+  .owl-fly {
+    animation: owl-frames-6 0.9s steps(6, jump-none) forwards;
+  }
+  .owl-idle {
+    animation: owl-blink 5s step-end infinite;
+  }
+  .owl-cheer {
+    animation: owl-cheer 1.3s step-end forwards;
+  }
+  .owl-shake {
+    animation: owl-shake 1.9s step-end forwards;
+  }
+  .book-open {
+    animation: owl-frames-6 1.2s steps(6, jump-none) forwards;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .owl-sprite {
+    background-image: url(/owl-idle.webp) !important;
+    background-size: 400% 100% !important;
+  }
+  .book-open {
+    background-position: 100% 0;
+  }
+}
+@keyframes owl-arrive {
+  from { transform: translate(-160%, -60%) rotate(-12deg); }
+  to { transform: translate(0, 0) rotate(0); }
+}
+@keyframes owl-frames-6 {
+  from { background-position: 0% 0; }
+  to { background-position: 100% 0; }
+}
+/* idle sheet: open, half shut, shut, curious tilt */
+@keyframes owl-blink {
+  0% { background-position: 0% 0; }
+  80% { background-position: 33.333% 0; }
+  82% { background-position: 66.667% 0; }
+  84% { background-position: 33.333% 0; }
+  86% { background-position: 0% 0; }
+  93% { background-position: 100% 0; }
+  99% { background-position: 0% 0; }
+}
+/* fly sheet: flap the wings up twice, then sit down */
+@keyframes owl-cheer {
+  0% { background-position: 20% 0; }
+  18% { background-position: 0% 0; }
+  36% { background-position: 20% 0; }
+  54% { background-position: 0% 0; }
+  72% { background-position: 60% 0; }
+  86%, 100% { background-position: 100% 0; }
+}
+/* shake sheet: look left, centre, right, then the facepalm, held */
+@keyframes owl-shake {
+  0% { background-position: 0% 0; }
+  16% { background-position: 33.333% 0; }
+  32% { background-position: 66.667% 0; }
+  48% { background-position: 33.333% 0; }
+  60%, 100% { background-position: 100% 0; }
+}
+
 /* Night sky behind the crash game. */
 .den-sky {
   background:

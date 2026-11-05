@@ -8,6 +8,7 @@ import { BOOK, BOOK_PAYS, LINES, PAYS, REELS, spinFromSeed, STAKES, STRIPS, type
 import { useT } from "@/i18n/client";
 import { denApi, useDenAccount } from "../lion-den/useDen";
 import { MoneyRain } from "../lion-den/MoneyRain";
+import { BookOpening, OwlSprite, type OwlMood } from "./OwlSprite";
 
 const START: Grid = [
   [6, 0, 3],
@@ -46,7 +47,9 @@ export function OracleGame() {
   const [landed, setLanded] = useState<number[]>(Array(REELS).fill(0));
   const [busy, setBusy] = useState(false);
   const [focus, setFocus] = useState<Focus>(NO_FOCUS);
-  const [banner, setBanner] = useState<{ title: string; sub?: string; hype?: number } | null>(null);
+  const [banner, setBanner] = useState<{ title: string; sub?: string; hype?: number; book?: boolean } | null>(null);
+  const [owl, setOwl] = useState<{ mood: OwlMood; n: number }>({ mood: "fly", n: 0 });
+  const react = (mood: OwlMood) => setOwl((v) => ({ mood, n: v.n + 1 }));
   const [free, setFree] = useState<{ i: number; n: number; hype: number; won: number } | null>(null);
   const [result, setResult] = useState<{ text: string; good: boolean } | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -141,7 +144,8 @@ export function OracleGame() {
     let total = res.spin.base.pay;
     if (res.spin.free) {
       const { hype, screens } = res.spin.free;
-      setBanner({ title: o.freeTitle, sub: o.freeIntro(10) });
+      react("cheer");
+      setBanner({ title: o.freeTitle, sub: o.freeIntro(10), book: true });
       await wait(1800);
       setBanner({ title: o.freeTitle, sub: o.hype(o.symbols[hype]), hype });
       await wait(1800);
@@ -171,6 +175,7 @@ export function OracleGame() {
     setCommit(res.nextCommit);
     setLast(commitBefore ? { seed: res.seed, commit: commitBefore, pay: res.spin.pay } : null);
     setResult(res.payout > 0 ? { text: o.win(usd(res.payout)), good: true } : { text: o.noWin, good: false });
+    react(res.payout > 0 ? "cheer" : "shake");
     if (res.payout >= stake * 20) setRain((r) => ({ n: r.n + 1, amount: usd(res.payout) }));
     setStats((s) => (s ? { spins: s.spins + 1, wagered: s.wagered + stake, won: s.won + res.payout, best: Math.max(s.best, res.payout) } : s));
     setBusy(false);
@@ -202,15 +207,20 @@ export function OracleGame() {
     <div className="den-dark space-y-6 rounded-[28px] p-3 sm:p-6">
       <MoneyRain trigger={rain.n} amount={rain.amount} />
       <header className="flex flex-wrap items-center gap-3">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/owl-scroll.png" alt="" className="h-16 w-auto" draggable={false} />
         <h1 className="font-display text-4xl font-extrabold sm:text-5xl">{o.title}</h1>
         <span className="rounded-full bg-accent-2 px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wide text-white">{o.secret}</span>
         <p className="w-full max-w-2xl text-sm text-muted">{o.lead}</p>
       </header>
 
       <section className="den-panel p-3 sm:p-5">
-        <div className={`oracle-machine relative mx-auto max-w-3xl rounded-[22px] p-2 sm:p-4 ${free ? "oracle-free" : ""}`}>
+        <div className={`oracle-machine relative mx-auto mt-16 max-w-3xl rounded-[22px] p-2 sm:mt-24 sm:p-4 ${free ? "oracle-free" : ""}`}>
+          {/* The owl sits on the top edge of the machine and reacts to every spin. */}
+          <OwlSprite
+            mood={owl.mood}
+            play={owl.n}
+            onDone={() => setOwl((v) => ({ mood: "idle", n: v.n }))}
+            className="pointer-events-none absolute bottom-[calc(100%-14px)] right-3 z-20 w-28 sm:right-6 sm:w-40"
+          />
           {free && (
             <div className="mb-2 flex items-center justify-between px-1 text-sm font-extrabold">
               <span className="flex items-center gap-2">
@@ -261,8 +271,9 @@ export function OracleGame() {
           {banner && (
             <div className="oracle-banner absolute inset-0 z-10 grid place-items-center rounded-[22px] bg-black/70 p-4 text-center">
               <div>
+                {banner.book && <BookOpening className="mx-auto w-32 sm:w-40" />}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                {banner.hype === undefined && <img src="/owl-scroll.png" alt="" className="mx-auto h-28 w-auto" draggable={false} />}
+                {banner.hype === undefined && !banner.book && <img src="/owl-scroll.png" alt="" className="mx-auto h-28 w-auto" draggable={false} />}
                 {banner.hype !== undefined && <Sym s={banner.hype} className="oracle-hype mx-auto h-28 w-28" />}
                 <div className="font-display mt-2 text-4xl font-extrabold text-[#ffd36b] sm:text-5xl">{banner.title}</div>
                 {banner.sub && <div className="mt-2 text-lg font-bold">{banner.sub}</div>}
