@@ -518,6 +518,8 @@ export const de = {
     spin: "Drehen",
     spinning: "Dreht …",
     login: "Anmelden und spielen",
+    signing: "Bitte in der Wallet signieren …",
+    signCancelled: "Signatur abgebrochen. Klick nochmals auf „Anmelden und spielen“ und bestätige in der Wallet.",
     loginHint: "Du spielst mit deinem Spielkonto aus dem Löwensprung – ohne Transaktion pro Spin.",
     balance: "Spielkonto",
     topUp: "Spielkonto im Löwensprung aufladen",

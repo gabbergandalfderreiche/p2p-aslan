@@ -181,6 +181,20 @@ export function OracleGame() {
     setBusy(false);
   }
 
+  /** Login by signature; the button stays locked so a second click cannot start a second request. */
+  async function enter() {
+    setBusy(true);
+    setError(null);
+    try {
+      await login();
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "";
+      setError(/reject|denied|cancel/i.test(msg) ? o.signCancelled : (t.den.errors[msg] ?? t.app.failed));
+    } finally {
+      setBusy(false);
+    }
+  }
+
   /** Recomputes the last spin in the browser: the seed must hash to the commit shown before. */
   async function verify() {
     if (!last) return;
@@ -194,8 +208,8 @@ export function OracleGame() {
       {t.connect.login}
     </button>
   ) : !loggedIn ? (
-    <button className="btn btn-primary w-full text-lg" onClick={() => void login().catch(() => setError(t.app.failed))}>
-      {o.login}
+    <button className="btn btn-primary w-full text-lg" disabled={busy} onClick={() => void enter()}>
+      {busy ? o.signing : o.login}
     </button>
   ) : (
     <button className="btn btn-primary w-full py-4 text-xl" disabled={busy || (me?.balance ?? 0) < stake} onClick={() => void play()}>
@@ -212,7 +226,7 @@ export function OracleGame() {
         <p className="w-full max-w-2xl text-sm text-muted">{o.lead}</p>
       </header>
 
-      <section className="den-panel p-3 sm:p-5">
+      <section className="den-panel oracle-stage overflow-hidden p-3 sm:p-5">
         <div className={`oracle-machine relative mx-auto mt-16 max-w-3xl rounded-[22px] p-2 sm:mt-24 sm:p-4 ${free ? "oracle-free" : ""}`}>
           {/* The owl sits on the top edge of the machine and reacts to every spin. */}
           <OwlSprite

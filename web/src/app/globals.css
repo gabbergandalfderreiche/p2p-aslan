@@ -443,8 +443,14 @@ body {
   background-size: 1000% 100%;
   background-repeat: no-repeat;
 }
+/* The vault behind the machine; darker towards the bottom so the controls stay readable. */
+.oracle-stage {
+  background:
+    linear-gradient(180deg, rgba(18, 12, 24, 0.1), rgba(18, 12, 24, 0.45) 55%, rgba(18, 12, 24, 0.9)),
+    url(/oracle-bg.webp) center top / cover no-repeat;
+}
 .oracle-machine {
-  background: linear-gradient(160deg, #2a1838, #1a1222 55%, #2b1420);
+  background: linear-gradient(160deg, rgba(42, 24, 56, 0.88), rgba(26, 18, 34, 0.9) 55%, rgba(43, 20, 32, 0.88));
   border: 2px solid rgba(245, 181, 58, 0.55);
   box-shadow: 0 0 40px rgba(245, 181, 58, 0.18), inset 0 0 60px rgba(0, 0, 0, 0.5);
 }

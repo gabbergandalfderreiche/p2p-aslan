@@ -519,6 +519,8 @@ export const en: Dictionary = {
     spin: "Spin",
     spinning: "Spinning …",
     login: "Sign in and play",
+    signing: "Please sign in your wallet …",
+    signCancelled: "Signature cancelled. Click “Sign in and play” again and confirm in your wallet.",
     loginHint: "You play with your game account from Lion Leap – no transaction per spin.",
     balance: "Game account",
     topUp: "Top up the game account in Lion Leap",
