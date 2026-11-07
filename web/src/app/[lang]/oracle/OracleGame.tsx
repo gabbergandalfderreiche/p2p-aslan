@@ -223,7 +223,9 @@ export function OracleGame() {
   );
 
   return (
-    <div className="den-dark space-y-6 rounded-[28px] p-3 sm:p-6">
+    <div className="den-dark oracle-root space-y-6 rounded-[28px] p-3 sm:p-6">
+      {/* The vault picture fills the whole screen behind the page. */}
+      <div className="oracle-page-bg pointer-events-none fixed inset-0 -z-10" aria-hidden />
       <MoneyRain trigger={rain.n} amount={rain.amount} />
       <header className="flex flex-wrap items-center gap-3">
         <h1 className="font-display text-4xl font-extrabold sm:text-5xl">{o.title}</h1>
@@ -232,7 +234,7 @@ export function OracleGame() {
       </header>
 
       <section className="den-panel oracle-stage overflow-hidden p-3 sm:p-5">
-        <div className={`oracle-machine relative mx-auto mt-16 max-w-3xl rounded-[22px] p-2 sm:mt-24 sm:p-4 ${free ? "oracle-free" : ""}`}>
+        <div className={`oracle-machine relative mx-auto mt-16 max-w-2xl rounded-[22px] p-2 sm:mt-24 sm:p-4 ${free ? "oracle-free" : ""}`}>
           {/* The owl sits on the top edge of the machine and reacts to every spin. */}
           <OwlSprite
             mood={owl.mood}
@@ -251,9 +253,9 @@ export function OracleGame() {
           )}
           <div className="relative grid grid-cols-5 gap-1.5 sm:gap-2">
             {grid.map((col, r) => (
-              <div key={r} className="oracle-reel relative overflow-hidden rounded-xl">
+              <div key={r} className="oracle-reel relative aspect-[1/3] overflow-hidden rounded-xl">
                 {spinning[r] ? (
-                  <div className="oracle-spin">
+                  <div className="oracle-spin absolute inset-x-0 top-0">
                     {[...STRIPS[r].slice(0, 8), ...STRIPS[r].slice(0, 8)].map((s, i) => (
                       <Sym key={i} s={s} className="aspect-square w-full" />
                     ))}
@@ -301,7 +303,7 @@ export function OracleGame() {
           )}
         </div>
 
-        <div className="mx-auto mt-3 min-h-7 max-w-3xl text-center text-sm font-bold sm:text-base">
+        <div className="mx-auto mt-3 min-h-7 max-w-2xl text-center text-sm font-bold sm:text-base">
           {focus.text ? (
             <span className="text-[#ffd36b]">{focus.text}</span>
           ) : result ? (
@@ -309,7 +311,7 @@ export function OracleGame() {
           ) : null}
         </div>
 
-        <div className="mx-auto mt-3 max-w-3xl space-y-3">
+        <div className="mx-auto mt-3 max-w-2xl space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex flex-wrap items-center gap-1.5">
               <span className="mr-1 text-sm font-bold">{o.stake}</span>
